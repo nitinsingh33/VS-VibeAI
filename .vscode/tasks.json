@@ -1,0 +1,45 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Start VibeAI Search Agent",
+			"type": "shell",
+			"command": "python3",
+			"args": [
+				"main.py"
+			],
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start Python Backend",
+			"type": "shell",
+			"command": "/Users/amanmathur/Downloads/VS-VibeAI/.venv/bin/python",
+			"args": ["-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"],
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start Frontend Dev",
+			"type": "shell",
+			"command": "npm",
+			"args": ["run", "dev"],
+			"options": {"cwd": "${workspaceFolder}/web"},
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start Node Proxy",
+			"type": "shell",
+			"command": "node",
+			"args": ["server/index.js"],
+			"options": {"cwd": "${workspaceFolder}/web"},
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": []
+		}
+	]
+}

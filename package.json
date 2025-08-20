@@ -1,0 +1,26 @@
+{
+  "name": "vibeai-search-agent-python",
+  "version": "1.0.0",
+  "description": "A Python AI agent that searches for information using Google/Serper API and generates responses using Gemini 2.0 Flash",
+  "main": "main.py",
+  "scripts": {
+    "install": "pip install -r requirements.txt",
+    "start": "python main.py",
+    "dev": "python -m flask --app main.py run --debug",
+    "test": "python -m pytest tests/"
+  },
+  "keywords": [
+    "ai",
+    "search",
+    "gemini",
+    "serper",
+    "agent",
+    "python"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.1.0",
+    "http-proxy-middleware": "^3.0.5"
+  }
+}

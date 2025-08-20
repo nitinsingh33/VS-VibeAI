@@ -1,0 +1,27 @@
+{
+  "scrape_timestamp": "20250817_000912",
+  "scraping_method": "premium_quality_focused",
+  "target_per_oem": 2000,
+  "total_comments": 0,
+  "oem_summary": {
+    "Ola Electric": 0,
+    "TVS iQube": 0,
+    "Bajaj Chetak": 0,
+    "Ather": 0,
+    "Hero Vida": 0
+  },
+  "quality_criteria": [
+    "High engagement (likes, replies)",
+    "Recent comments (prioritized)",
+    "Detailed feedback (length)",
+    "Content quality (keywords)",
+    "Popular videos"
+  ],
+  "comments": {
+    "Ola Electric": [],
+    "TVS iQube": [],
+    "Bajaj Chetak": [],
+    "Ather": [],
+    "Hero Vida": []
+  }
+}

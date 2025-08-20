@@ -1,0 +1,41 @@
+{
+  "2025-08-17": {
+    "total_queries": 5,
+    "total_processing_time": 117.9327027797699,
+    "avg_processing_time": 23.58654055595398,
+    "unique_users": 0,
+    "export_requests": 5,
+    "errors": 0,
+    "popular_oems": {},
+    "temporal_queries": 0,
+    "ai_analysis_queries": 0
+  },
+  "2025-08-19": {
+    "total_queries": 9,
+    "total_processing_time": 182.69095182418823,
+    "avg_processing_time": 20.298994647132027,
+    "unique_users": 0,
+    "export_requests": 6,
+    "errors": 0,
+    "popular_oems": {
+      "Ola Electric": 3,
+      "Ather": 1
+    },
+    "temporal_queries": 1,
+    "ai_analysis_queries": 0
+  },
+  "2025-08-20": {
+    "total_queries": 9,
+    "total_processing_time": 165.48961853981018,
+    "avg_processing_time": 18.38773539331224,
+    "unique_users": 0,
+    "export_requests": 6,
+    "errors": 2,
+    "popular_oems": {
+      "Ather": 6,
+      "Ola Electric": 2
+    },
+    "temporal_queries": 0,
+    "ai_analysis_queries": 0
+  }
+}

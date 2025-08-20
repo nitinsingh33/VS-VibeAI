@@ -1,0 +1,15 @@
+:root{--bg:#0f1724;--panel:#0b1220;--accent:#6ee7b7;--muted:#9aa4b2}
+body,html,#root{height:100%;margin:0;font-family:Inter,system-ui,Arial;background:var(--bg);color:#e6eef6}
+.app{display:flex;height:100vh}
+.sidebar{width:320px;background:var(--panel);padding:20px;box-sizing:border-box}
+.brand{font-size:20px;font-weight:700;color:var(--accent);margin-bottom:10px}
+.controls button{display:block;width:100%;margin-bottom:8px;padding:10px;border-radius:6px;border:none;background:#0b1a2a;color:#e6eef6}
+.info h4{margin-top:20px}
+.chat{flex:1;display:flex;flex-direction:column}
+.messages{flex:1;padding:20px;overflow:auto}
+.msg{margin-bottom:12px}
+.msg.user .role{color:var(--accent)}
+.msg.assistant .role{color:#7dd3fc}
+.input{display:flex;padding:12px;background:#06121a}
+.input input{flex:1;padding:10px;border-radius:6px;border:none;margin-right:8px}
+.input button{padding:10px;border-radius:6px;border:none;background:var(--accent)}

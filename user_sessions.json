@@ -1,0 +1,322 @@
+{
+  "e8c13e1e-e43f-4c12-afd1-0929e93ba349": {
+    "first_query_time": "2025-08-16T20:48:05.575566",
+    "last_query_time": "2025-08-16T20:48:05.575566",
+    "total_queries": 1,
+    "total_processing_time": 17.358597993850708,
+    "unique_oems_queried": [
+      "Ola Electric",
+      "TVS iQube"
+    ],
+    "export_requests": 0,
+    "errors": 1
+  },
+  "5c4aee4e-1aa9-46f8-a5b2-9b3d886a8320": {
+    "first_query_time": "2025-08-16T20:49:30.765674",
+    "last_query_time": "2025-08-16T20:49:30.765674",
+    "total_queries": 1,
+    "total_processing_time": 6.2322609424591064,
+    "unique_oems_queried": [
+      "Ola Electric"
+    ],
+    "export_requests": 0,
+    "errors": 1
+  },
+  "83cbb64a-2c1f-45e5-a5c8-d448d0399408": {
+    "first_query_time": "2025-08-16T23:42:54.094576",
+    "last_query_time": "2025-08-16T23:42:54.094576",
+    "total_queries": 1,
+    "total_processing_time": 40.20178198814392,
+    "unique_oems_queried": [
+      "Ola Electric"
+    ],
+    "export_requests": 1,
+    "errors": 0
+  },
+  "1a7086aa-812d-479d-83de-f1e89d7dd1ec": {
+    "first_query_time": "2025-08-17T00:32:45.749902",
+    "last_query_time": "2025-08-17T00:32:45.749902",
+    "total_queries": 1,
+    "total_processing_time": 18.71329092979431,
+    "unique_oems_queried": [],
+    "export_requests": 1,
+    "errors": 0
+  },
+  "1c40b8bb-bcfb-42b8-b27d-120c0e583ead": {
+    "first_query_time": "2025-08-17T00:35:11.556722",
+    "last_query_time": "2025-08-17T00:35:11.556722",
+    "total_queries": 1,
+    "total_processing_time": 29.889638900756836,
+    "unique_oems_queried": [
+      "Ola Electric",
+      "TVS iQube"
+    ],
+    "export_requests": 1,
+    "errors": 0
+  },
+  "1b432b54-78c6-49d8-b0d0-6ca9a21153c8": {
+    "first_query_time": "2025-08-17T01:12:27.925568",
+    "last_query_time": "2025-08-17T01:12:27.925568",
+    "total_queries": 1,
+    "total_processing_time": 16.270981073379517,
+    "unique_oems_queried": [],
+    "export_requests": 1,
+    "errors": 0
+  },
+  "5cea6e25-efa9-47af-af35-16b85800fa86": {
+    "first_query_time": "2025-08-17T01:19:05.491478",
+    "last_query_time": "2025-08-17T01:19:05.491478",
+    "total_queries": 1,
+    "total_processing_time": 21.19463801383972,
+    "unique_oems_queried": [],
+    "export_requests": 1,
+    "errors": 0
+  },
+  "ddc96091-80e9-4fc7-900a-4e31736dc5eb": {
+    "first_query_time": "2025-08-17T01:45:17.726385",
+    "last_query_time": "2025-08-17T01:45:17.726385",
+    "total_queries": 1,
+    "total_processing_time": 14.381577968597412,
+    "unique_oems_queried": [],
+    "export_requests": 1,
+    "errors": 0
+  },
+  "8f118684-d110-4f8a-9b0e-614bc5426465": {
+    "first_query_time": "2025-08-17T01:46:09.770987",
+    "last_query_time": "2025-08-17T01:46:09.770987",
+    "total_queries": 1,
+    "total_processing_time": 19.398766040802002,
+    "unique_oems_queried": [],
+    "export_requests": 1,
+    "errors": 0
+  },
+  "b78e8541-8148-4e55-be47-860cb8fe175d": {
+    "first_query_time": "2025-08-17T02:00:17.795953",
+    "last_query_time": "2025-08-17T02:00:17.795953",
+    "total_queries": 1,
+    "total_processing_time": 17.588177919387817,
+    "unique_oems_queried": [],
+    "export_requests": 1,
+    "errors": 0
+  },
+  "29d2b3ff-9357-4482-95e7-c52af28b2c1b": {
+    "first_query_time": "2025-08-17T02:02:10.228104",
+    "last_query_time": "2025-08-17T02:02:10.228104",
+    "total_queries": 1,
+    "total_processing_time": 24.67786478996277,
+    "unique_oems_queried": [],
+    "export_requests": 1,
+    "errors": 0
+  },
+  "2592c851-0198-417d-8f96-5a91b6245237": {
+    "first_query_time": "2025-08-17T02:11:34.620002",
+    "last_query_time": "2025-08-17T02:11:34.620002",
+    "total_queries": 1,
+    "total_processing_time": 28.44107413291931,
+    "unique_oems_queried": [],
+    "export_requests": 1,
+    "errors": 0
+  },
+  "e9cb584b-a81a-4087-bb1e-91631f24cc84": {
+    "first_query_time": "2025-08-17T02:15:20.149018",
+    "last_query_time": "2025-08-17T02:15:20.149018",
+    "total_queries": 1,
+    "total_processing_time": 24.17763614654541,
+    "unique_oems_queried": [],
+    "export_requests": 1,
+    "errors": 0
+  },
+  "d93df309-a1a5-442c-8823-175e52ac06d0": {
+    "first_query_time": "2025-08-17T02:16:41.600094",
+    "last_query_time": "2025-08-17T02:16:41.600094",
+    "total_queries": 1,
+    "total_processing_time": 23.04794979095459,
+    "unique_oems_queried": [],
+    "export_requests": 1,
+    "errors": 0
+  },
+  "83e12177-2ec2-4fa9-a2c7-7ba1ea579810": {
+    "first_query_time": "2025-08-19T21:40:54.661213",
+    "last_query_time": "2025-08-19T21:40:54.661213",
+    "total_queries": 1,
+    "total_processing_time": 20.78825283050537,
+    "unique_oems_queried": [
+      "Ola Electric"
+    ],
+    "export_requests": 1,
+    "errors": 0
+  },
+  "d0d57897-fc2a-485f-8ee8-8090f6fef51d": {
+    "first_query_time": "2025-08-19T21:54:40.933810",
+    "last_query_time": "2025-08-19T21:54:40.933810",
+    "total_queries": 1,
+    "total_processing_time": 19.232733011245728,
+    "unique_oems_queried": [
+      "Ola Electric"
+    ],
+    "export_requests": 1,
+    "errors": 0
+  },
+  "c7764004-01a8-4a19-ae4c-31f6baf865ec": {
+    "first_query_time": "2025-08-19T22:20:00.263742",
+    "last_query_time": "2025-08-19T22:20:00.263742",
+    "total_queries": 1,
+    "total_processing_time": 17.930583000183105,
+    "unique_oems_queried": [],
+    "export_requests": 1,
+    "errors": 0
+  },
+  "f8a54db3-6495-479a-9a13-8a616959a19c": {
+    "first_query_time": "2025-08-19T22:22:08.017995",
+    "last_query_time": "2025-08-19T22:22:08.017995",
+    "total_queries": 1,
+    "total_processing_time": 17.916723012924194,
+    "unique_oems_queried": [
+      "Ola Electric"
+    ],
+    "export_requests": 1,
+    "errors": 0
+  },
+  "fca6d30f-0361-4be9-9c0e-c1c336d4b139": {
+    "first_query_time": "2025-08-19T22:31:36.621333",
+    "last_query_time": "2025-08-19T22:31:36.621333",
+    "total_queries": 1,
+    "total_processing_time": 18.619246006011963,
+    "unique_oems_queried": [],
+    "export_requests": 1,
+    "errors": 0
+  },
+  "bca625db-3d6e-4e2a-9e84-a5c3fdbe73b6": {
+    "first_query_time": "2025-08-19T22:32:39.460466",
+    "last_query_time": "2025-08-19T22:32:39.460466",
+    "total_queries": 1,
+    "total_processing_time": 39.64778995513916,
+    "unique_oems_queried": [],
+    "export_requests": 1,
+    "errors": 0
+  },
+  "fe114508-15f0-4941-9a7e-1a32f4d8d653": {
+    "first_query_time": "2025-08-19T23:39:42.544423",
+    "last_query_time": "2025-08-19T23:39:42.544423",
+    "total_queries": 1,
+    "total_processing_time": 15.262501239776611,
+    "unique_oems_queried": [],
+    "export_requests": 0,
+    "errors": 0
+  },
+  "1c1f653c-36bc-41a4-88db-64dd16f5b6fd": {
+    "first_query_time": "2025-08-19T23:48:29.709333",
+    "last_query_time": "2025-08-19T23:48:29.709333",
+    "total_queries": 1,
+    "total_processing_time": 13.08106803894043,
+    "unique_oems_queried": [],
+    "export_requests": 0,
+    "errors": 0
+  },
+  "39cd08f0-bf78-4618-87b7-f8a2196e63a0": {
+    "first_query_time": "2025-08-19T23:57:57.613695",
+    "last_query_time": "2025-08-19T23:57:57.613695",
+    "total_queries": 1,
+    "total_processing_time": 20.21205472946167,
+    "unique_oems_queried": [
+      "Ather"
+    ],
+    "export_requests": 0,
+    "errors": 0
+  },
+  "2f678794-7929-427e-88c8-693912179f66": {
+    "first_query_time": "2025-08-20T00:02:59.602442",
+    "last_query_time": "2025-08-20T00:02:59.602442",
+    "total_queries": 1,
+    "total_processing_time": 20.140450954437256,
+    "unique_oems_queried": [
+      "Ather"
+    ],
+    "export_requests": 1,
+    "errors": 0
+  },
+  "8fc424a4-2852-47d8-8538-aaae828564de": {
+    "first_query_time": "2025-08-20T00:07:38.314983",
+    "last_query_time": "2025-08-20T00:07:38.314983",
+    "total_queries": 1,
+    "total_processing_time": 17.976747035980225,
+    "unique_oems_queried": [
+      "Ather"
+    ],
+    "export_requests": 1,
+    "errors": 0
+  },
+  "a6e9127f-fd39-4281-a371-5ecf4a47cf59": {
+    "first_query_time": "2025-08-20T00:09:32.991243",
+    "last_query_time": "2025-08-20T00:09:32.991243",
+    "total_queries": 1,
+    "total_processing_time": 16.44727087020874,
+    "unique_oems_queried": [
+      "Ather"
+    ],
+    "export_requests": 1,
+    "errors": 0
+  },
+  "0bdc063b-776d-4538-bc8f-12cb752113dd": {
+    "first_query_time": "2025-08-20T00:11:57.269929",
+    "last_query_time": "2025-08-20T00:11:57.269929",
+    "total_queries": 1,
+    "total_processing_time": 18.12372899055481,
+    "unique_oems_queried": [
+      "Ather"
+    ],
+    "export_requests": 1,
+    "errors": 0
+  },
+  "a944cd8e-e969-4541-8f28-e02b544a9362": {
+    "first_query_time": "2025-08-20T00:20:00.963493",
+    "last_query_time": "2025-08-20T00:20:00.963493",
+    "total_queries": 1,
+    "total_processing_time": 17.93516778945923,
+    "unique_oems_queried": [
+      "Ather",
+      "Ola Electric"
+    ],
+    "export_requests": 1,
+    "errors": 0
+  },
+  "41106f47-c22f-4069-83c4-34afa77c19dd": {
+    "first_query_time": "2025-08-20T00:23:15.748595",
+    "last_query_time": "2025-08-20T00:23:15.748595",
+    "total_queries": 1,
+    "total_processing_time": 21.940640926361084,
+    "unique_oems_queried": [
+      "Ola Electric",
+      "Ather"
+    ],
+    "export_requests": 1,
+    "errors": 0
+  },
+  "23ad637b-53b4-4030-a064-46bb0ae242f8": {
+    "first_query_time": "2025-08-20T10:23:44.806722",
+    "last_query_time": "2025-08-20T10:23:44.806722",
+    "total_queries": 1,
+    "total_processing_time": 23.116544008255005,
+    "unique_oems_queried": [],
+    "export_requests": 0,
+    "errors": 1
+  },
+  "6e3474ce-bb76-4fee-af47-97f5346f0fd6": {
+    "first_query_time": "2025-08-20T10:52:29.537445",
+    "last_query_time": "2025-08-20T10:52:29.537445",
+    "total_queries": 1,
+    "total_processing_time": 7.5121910572052,
+    "unique_oems_queried": [],
+    "export_requests": 0,
+    "errors": 0
+  },
+  "c9070325-f6e7-4c19-9941-ba0e84072179": {
+    "first_query_time": "2025-08-20T11:21:53.893366",
+    "last_query_time": "2025-08-20T11:21:53.893366",
+    "total_queries": 1,
+    "total_processing_time": 22.296876907348633,
+    "unique_oems_queried": [],
+    "export_requests": 0,
+    "errors": 1
+  }
+}

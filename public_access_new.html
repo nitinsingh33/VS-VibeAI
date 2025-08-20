@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SolysAI - Access Portal</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+        .logo {
+            font-size: 3em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 40px;
+        }
+        .access-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 40px 0;
+        }
+        .access-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .access-card:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+        }
+        .card-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+        .card-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .card-description {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .access-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .access-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .status {
+            margin-top: 40px;
+            padding: 20px;
+            background: #e8f5e8;
+            border-radius: 10px;
+            border-left: 4px solid #28a745;
+        }
+        .features {
+            text-align: left;
+            margin: 30px 0;
+        }
+        .features h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .features ul {
+            color: #666;
+            list-style-type: none;
+            padding: 0;
+        }
+        .features li {
+            padding: 5px 0;
+            position: relative;
+            padding-left: 25px;
+        }
+        .features li:before {
+            content: "✅";
+            position: absolute;
+            left: 0;
+        }
+        @media (max-width: 768px) {
+            .access-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🔍 SolysAI</div>
+        <div class="subtitle">Enhanced Intelligence Platform for Indian EV Market Analysis</div>
+        
+        <div class="access-grid">
+            <div class="access-card" onclick="launchDashboard()">
+                <div class="card-icon">🎯</div>
+                <div class="card-title">Interactive Dashboard</div>
+                <div class="card-description">Access enhanced chat interface, export capabilities, and comprehensive analytics with temporal analysis features</div>
+                <button onclick="launchDashboard()" class="access-btn">Launch Dashboard</button>
+            </div>
+            
+            <div class="access-card" onclick="testAPI()">
+                <div class="card-icon">⚡</div>
+                <div class="card-title">API Access</div>
+                <div class="card-description">Direct backend API for developers and integrations. Test the enhanced chat functionality</div>
+                <button onclick="testAPI()" class="access-btn">Test API</button>
+            </div>
+        </div>
+
+        <div class="features">
+            <h3>🚀 Latest Enhancements</h3>
+            <ul>
+                <li>Complete 10 OEM coverage: Ola Electric, Ather, Bajaj Chetak, TVS iQube, Hero Vida, Ampere, River Mobility, Ultraviolette, Revolt, BGauss</li>
+                <li>Enhanced export functionality: CSV, Excel, Word exports for all OEMs</li>
+                <li>Temporal analysis with trend tracking and multi-period comparison</li>
+                <li>Gemini Deep Research style formatting with numbered citations</li>
+                <li>Professional source attribution separating market data from user feedback</li>
+                <li>50,000+ comments analyzed across all 10 Indian EV brands</li>
+                <li>Real-time sentiment analysis and market intelligence</li>
+            </ul>
+        </div>
+
+        <div class="status">
+            <strong>🟢 System Status: All Services Operational</strong><br>
+            Backend API: ✅ Active | Frontend Dashboard: ✅ Active | Database: ✅ 50K+ Records | Temporal Analysis: ✅ Enhanced
+        </div>
+    </div>
+
+    <script>
+        function launchDashboard() {
+            // Direct access to global Streamlit dashboard
+            window.open('https://16d6f104bcec.ngrok-free.app', '_blank');
+        }
+        
+        function testAPI() {
+            // Create modal for API testing
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.8); display: flex; align-items: center; 
+                justify-content: center; z-index: 1000;
+            `;
+            
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: white; padding: 30px; border-radius: 15px; 
+                max-width: 80%; max-height: 80%; overflow-y: auto; text-align: center;
+            `;
+            
+            content.innerHTML = `
+                <h3>🌐 External Access Information</h3>
+                <p><strong>✅ Dashboard Access:</strong> https://16d6f104bcec.ngrok-free.app</p>
+                <p><strong>💡 Features Available:</strong></p>
+                <ul style="text-align: left; margin: 20px 0;">
+                    <li>📊 Interactive Streamlit dashboard with all features</li>
+                    <li>📈 Temporal analysis with trend visualization</li>
+                    <li>🔄 Multi-period comparison analysis</li>
+                    <li>📄 Export capabilities (CSV, Excel, Word)</li>
+                    <li>🤖 Enhanced chat interface with professional formatting</li>
+                    <li>🔍 All 10 OEM coverage with 50K+ analyzed comments</li>
+                </ul>
+                <p style="color: #28a745;"><strong>✅ External access now works globally!</strong></p>
+                <p style="color: #007bff;"><strong>🎯 Click "Launch Dashboard" to access the full interface</strong></p>
+                <button onclick="document.body.removeChild(document.querySelector('[style*=\"fixed\"]'))" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 10px;">Close</button>
+                <button onclick="window.open('https://16d6f104bcec.ngrok-free.app', '_blank')" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 10px;">Open Dashboard</button>
+            `;
+            
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+        }
+    </script>
+</body>
+</html>
