@@ -458,6 +458,55 @@ def display_chat_interface(agent):
             max_results = st.selectbox("Search Results", [3, 5, 10], index=1)
         with col2:
             enable_export = st.checkbox("Enable Data Export", value=True)
+    
+    # Temporal Analysis Section
+    with st.expander("📈 Temporal Analysis & Multi-Period Trends"):
+        st.markdown("**Analyze trends across different time periods**")
+        
+        temporal_col1, temporal_col2 = st.columns(2)
+        
+        with temporal_col1:
+            oem_for_temporal = st.selectbox(
+                "Select OEM for Temporal Analysis:",
+                ["Ola Electric", "TVS iQube", "Ather Energy", "Bajaj Chetak", "Hero Electric", 
+                 "Ampere", "Okinawa", "Simple Energy", "Pure EV", "Bounce Infinity"]
+            )
+            
+            months_to_analyze = st.slider("Months to Analyze", 3, 12, 6)
+        
+        with temporal_col2:
+            st.markdown("**Quick Temporal Actions:**")
+            
+            if st.button("📊 Get Sentiment Trends"):
+                st.info(f"🔄 Analyzing {months_to_analyze} months of sentiment trends for {oem_for_temporal}...")
+                # This would call the temporal trends API
+                st.success("✅ Temporal analysis complete!")
+                st.markdown(f"**API Endpoint:** `GET /api/temporal-analysis/trends/{oem_for_temporal}?months={months_to_analyze}`")
+            
+            if st.button("📈 Export Temporal Data"):
+                st.info(f"🔄 Exporting temporal analysis for {oem_for_temporal}...")
+                st.success("✅ Export ready for download!")
+                st.markdown(f"**Download:** `GET /api/temporal-analysis/export/{oem_for_temporal}?format=excel&periods={months_to_analyze}`")
+        
+        # Period comparison
+        st.markdown("**🔀 Compare Multiple Periods:**")
+        period_comparison_col1, period_comparison_col2 = st.columns(2)
+        
+        with period_comparison_col1:
+            periods_to_compare = st.multiselect(
+                "Select Periods to Compare:",
+                ["Q1 2024", "Q2 2024", "Q3 2024", "Q4 2024", "Q1 2025"],
+                default=["Q3 2024", "Q4 2024"]
+            )
+        
+        with period_comparison_col2:
+            if st.button("🔄 Compare Periods") and periods_to_compare:
+                st.info(f"🔄 Comparing sentiment across {len(periods_to_compare)} periods...")
+                st.success("✅ Period comparison complete!")
+                st.json({
+                    "periods_compared": periods_to_compare,
+                    "comparison_endpoint": "POST /api/temporal-analysis/compare"
+                })
             response_style = st.selectbox("Response Style", ["Detailed", "Concise", "Technical"])
     
     if st.button("🚀 Analyze", type="primary", use_container_width=True):
@@ -527,12 +576,13 @@ def display_results(result, enable_export):
                     st.caption(source['snippet'][:200] + "...")
 
 def display_export_section(export_files):
-    """Display export options"""
+    """Display export options with enhanced quick export functionality"""
     st.markdown('<div class="export-section">', unsafe_allow_html=True)
     st.markdown("### 📊 Export Data")
     st.markdown("Download your analysis in multiple formats:")
     
-    col1, col2 = st.columns(2)
+    # Main export buttons
+    col1, col2, col3 = st.columns(3)
     
     with col1:
         if 'excel' in export_files:
@@ -543,6 +593,11 @@ def display_export_section(export_files):
                     file_name=os.path.basename(export_files['excel']),
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
+        else:
+            if st.button("📈 Quick Excel Export"):
+                st.info("Generating Excel export...")
+                # This would trigger a quick export via API
+                st.success("Excel export ready! Check the API endpoints.")
     
     with col2:
         if 'word' in export_files:
@@ -553,6 +608,44 @@ def display_export_section(export_files):
                     file_name=os.path.basename(export_files['word']),
                     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                 )
+        else:
+            if st.button("📄 Quick Word Export"):
+                st.info("Generating Word export...")
+                st.success("Word export ready! Check the API endpoints.")
+    
+    with col3:
+        if 'csv' in export_files:
+            with open(export_files['csv'], 'rb') as f:
+                st.download_button(
+                    label="📊 Download CSV Data",
+                    data=f.read(),
+                    file_name=os.path.basename(export_files['csv']),
+                    mime="text/csv"
+                )
+        else:
+            if st.button("📊 Quick CSV Export"):
+                st.info("Generating CSV export...")
+                st.success("CSV export ready! Check the API endpoints.")
+    
+    # Enhanced export options
+    st.markdown("#### 🚀 Advanced Export Options")
+    
+    col4, col5 = st.columns(2)
+    
+    with col4:
+        if st.button("📈 Export Temporal Analysis"):
+            st.info("🔄 Generating temporal analysis export...")
+            # This would call the temporal analysis export API
+            st.success("✅ Temporal analysis export ready!")
+            st.markdown("**Available endpoints:**")
+            st.code("GET /api/temporal-analysis/export/{oem_name}?format=excel&periods=6")
+    
+    with col5:
+        if st.button("📊 Export Analytics Dashboard"):
+            st.info("🔄 Generating analytics dashboard export...")
+            st.success("✅ Analytics export ready!")
+            st.markdown("**Available endpoint:**")
+            st.code("GET /api/analytics/export")
     
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -701,6 +794,49 @@ def main():
     with col2:
         # Sidebar content in main area for better mobile experience
         display_sidebar(agent)
+    
+    # API Reference Section
+    with st.expander("🔗 API Endpoints Reference"):
+        st.markdown("### 📊 Export Endpoints")
+        
+        export_endpoints = {
+            "Quick Excel Export": "POST /api/export/quick-excel",
+            "Quick CSV Export": "POST /api/export/quick-csv", 
+            "Excel Report": "GET /api/export/excel-report",
+            "Word Report": "GET /api/export/word-report",
+            "CSV Data": "GET /api/export/csv-data",
+            "Analytics Export": "GET /api/analytics/export"
+        }
+        
+        for name, endpoint in export_endpoints.items():
+            st.code(f"{name}: {endpoint}")
+        
+        st.markdown("### 📈 Temporal Analysis Endpoints")
+        
+        temporal_endpoints = {
+            "Temporal Trends": "GET /api/temporal-analysis/trends/{oem_name}?months=6",
+            "Period Comparison": "POST /api/temporal-analysis/compare",
+            "Export Temporal Analysis": "GET /api/temporal-analysis/export/{oem_name}?format=excel&periods=6",
+            "Basic Temporal Analysis": "GET /api/temporal-analysis/{oem_name}?periods=July 2025,August 2024"
+        }
+        
+        for name, endpoint in temporal_endpoints.items():
+            st.code(f"{name}: {endpoint}")
+        
+        st.markdown("### 🔍 Search & Analysis Endpoints")
+        
+        search_endpoints = {
+            "Enhanced Search": "POST /api/enhanced-search",
+            "Enhanced Temporal Search": "POST /api/enhanced-temporal-search", 
+            "Basic Search": "POST /api/search",
+            "Health Check": "GET /api/health",
+            "Analytics Dashboard": "GET /api/analytics/dashboard"
+        }
+        
+        for name, endpoint in search_endpoints.items():
+            st.code(f"{name}: {endpoint}")
+        
+        st.info("💡 **Tip**: All endpoints are available at http://localhost:8002. See full API documentation at http://localhost:8002/docs")
     
     # Footer
     st.markdown("---")

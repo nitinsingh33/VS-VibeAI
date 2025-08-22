@@ -25,15 +25,15 @@
     "ai_analysis_queries": 0
   },
   "2025-08-20": {
-    "total_queries": 9,
-    "total_processing_time": 165.48961853981018,
-    "avg_processing_time": 18.38773539331224,
+    "total_queries": 10,
+    "total_processing_time": 242.48151540756226,
+    "avg_processing_time": 24.248151540756226,
     "unique_users": 0,
-    "export_requests": 6,
+    "export_requests": 7,
     "errors": 2,
     "popular_oems": {
       "Ather": 6,
-      "Ola Electric": 2
+      "Ola Electric": 3
     },
     "temporal_queries": 0,
     "ai_analysis_queries": 0

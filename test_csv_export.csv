@@ -1,0 +1,2 @@
+OEM,Comment,Sentiment,Confidence,Date,Author,Likes,Source,Video_Title,Video_URL,Extraction_Method
+Ola Electric,Test comment for CSV export,positive,0.8,2024-08-01,TestUser,0,YouTube,,,api

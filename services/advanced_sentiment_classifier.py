@@ -425,6 +425,62 @@ class AdvancedSentimentClassifier:
             'share_weight': round(share_weight, 3)
         }
 
+    def _apply_contextual_sentiment_analysis(self, text_lower: str, positive_score: float, negative_score: float, sentiment_words: list) -> tuple:
+        """Apply contextual sentiment analysis for complex patterns"""
+        import re
+        
+        # Pattern 1: "Recommend" context analysis
+        if 'recommend' in text_lower:
+            # Positive recommend contexts
+            if any(pattern in text_lower for pattern in ['dil se recommend', 'strongly recommend', 'definitely recommend', 'highly recommend']):
+                positive_score += 1.5
+                sentiment_words.append({'word': 'contextual_positive_recommend', 'sentiment': 'positive', 'language': 'contextual'})
+            # Negative recommend contexts
+            elif any(pattern in text_lower for pattern in ['dont recommend', 'do not recommend', 'never recommend', 'not recommend']):
+                negative_score += 1.5
+                sentiment_words.append({'word': 'contextual_negative_recommend', 'sentiment': 'negative', 'language': 'contextual'})
+        
+        # Pattern 2: "Good" with negation analysis
+        good_negation_patterns = [
+            r'not\s+good', r'nahi\s+good', r'nhi\s+good',
+            r'good\s+nahi', r'good\s+nhi', r'achha\s+nahi', r'achha\s+nhi'
+        ]
+        for pattern in good_negation_patterns:
+            if re.search(pattern, text_lower):
+                negative_score += 1.5
+                sentiment_words.append({'word': f'negated_good_{pattern}', 'sentiment': 'negative', 'language': 'contextual'})
+        
+        # Pattern 3: "Dil se" context beyond direct patterns
+        if 'dil se' in text_lower and 'dil se recommend' not in text_lower and 'dil se mana' not in text_lower:
+            # Check broader context
+            context_window = text_lower
+            # Look for negative context indicators
+            negative_indicators = ['mat', 'mana', 'avoid', 'warning', 'beware', 'dont', 'nahi', 'problem', 'issue']
+            positive_indicators = ['suggest', 'achha', 'good', 'badhiya', 'mast', 'best', 'love', 'like']
+            
+            neg_count = sum(1 for indicator in negative_indicators if indicator in context_window)
+            pos_count = sum(1 for indicator in positive_indicators if indicator in context_window)
+            
+            if neg_count > pos_count:
+                negative_score += 1.0
+                sentiment_words.append({'word': 'dil_se_negative_context', 'sentiment': 'negative', 'language': 'contextual'})
+            elif pos_count > neg_count:
+                positive_score += 1.0
+                sentiment_words.append({'word': 'dil_se_positive_context', 'sentiment': 'positive', 'language': 'contextual'})
+        
+        # Pattern 4: Sarcastic positive patterns
+        sarcastic_patterns = [
+            r'(great|excellent|amazing)\s+(service|experience)\s+.*(problem|issue|terrible)',
+            r'(love|loved)\s+.*(service\s+center|repair|multiple\s+times)',
+            r'(perfect|fantastic)\s+.*(again|third\s+time|fourth\s+time)'
+        ]
+        for pattern in sarcastic_patterns:
+            if re.search(pattern, text_lower):
+                negative_score += 2.0  # Strong negative for sarcasm
+                sentiment_words.append({'word': f'sarcastic_pattern_{pattern[:20]}', 'sentiment': 'negative', 'language': 'contextual'})
+        
+        return positive_score, negative_score
+
     def analyze_sentiment_patterns(self, text: str, language_info: Dict) -> Dict[str, Any]:
         """Analyze sentiment using pattern matching with improved word boundary detection"""
         import re  # Import re module for regex operations
@@ -436,26 +492,20 @@ class AdvancedSentimentClassifier:
         sentiment_words = []
         
         # Check for advice/question patterns first (should be neutral)
-        # But exclude context-driven positive/negative recommendations
+        # But be more specific to avoid false positives with sentiment statements
         advice_patterns = [
-            'suggest', 'advice', 'help', 'bta', 'batao', 'tell me', 'koi', 'kaun', 'which',
-            'please help', 'mujhe', 'chahiye', 'leni', 'kharidna', 'buy', 'purchase', 'planning',
+            'suggest me', 'recommend me', 'advice me', 'help me', 'bta', 'batao', 'tell me', 'koi', 'kaun', 'which',
+            'please help', 'mujhe', 'chahiye', 'leni', 'kharidna', 'buy karna', 'purchase karna', 'planning',
             'bhaiya', 'sir', 'please', 'confusion', 'decide', 'choice', 'option', 'budget',
-            'suggestion', 'guide', 'kya lena', 'best hai', 'dijiye', 'bataye'
-        ]
-        
-        # Context-aware positive recommendation patterns
-        positive_recommendation_patterns = [
-            'dil se recommend', 'दिल से recommend', 'dil se suggest', 'heartily recommend',
-            'strongly recommend', 'highly recommend', 'definitely recommend', 'really recommend',
-            'zaroor recommend', 'जरूर recommend', 'bilkul recommend', 'बिल्कुल recommend'
-        ]
-        
-        # Context-aware negative recommendation patterns  
-        negative_recommendation_patterns = [
-            'dil se mana', 'दिल से मना', 'dil se mat', 'दिल से मत', 'never recommend',
-            'dont recommend', "don't recommend", 'avoid recommend', 'mat recommend',
-            'मत recommend', 'kabhi mat', 'कभी मत', 'bilkul mat', 'बिल्कुल मत'
+            'suggestion', 'guide', 'kya lena', 'best hai', 'dijiye', 'bataye', 'should i buy',
+            'which one to buy', 'what to buy', 'help me choose', 'suggest karo', 'advice dena',
+            'your opinion', 'plzzz rply', 'please reply', 'pls reply', 'reply pls', 'rply pls',
+            'which one is best', 'which is best', 'what is best', 'kya best hai', 'kaun sa best',
+            'information about', 'interested to know', 'want to know', 'sales number', 'sales data',
+            'sales information', 'give me info', 'give information', 'batao sales', 'numbers dedo',
+            'data chahiye', 'figures chahiye', 'stats chahiye', 'research purpose', 'analysis purpose',
+            'comparison karna', 'compare karna', 'vs comparison', 'or comparison', 'between comparison',
+            'lesser known companies', 'unknown companies', 'small companies', 'tier 2 companies'
         ]
         
         # Strong negative patterns that should override neutral bias
@@ -505,7 +555,13 @@ class AdvancedSentimentClassifier:
             'froud', 'frawd', 'frod', 'company froud', 'company frawd',
             'koi service nhi', 'koi service nahi', 'कोई सर्विस नही',
             'bhag gya', 'भाग गया', 'bhag gaya', 'company bhag gyi', 'company bhag gayi',
-            'kmpny froud', 'cmpany fraud', 'hero froud', 'ola froud', 'ather froud'
+            'kmpny froud', 'cmpany fraud', 'hero froud', 'ola froud', 'ather froud',
+            # Sound/noise related negatives
+            'sound irritating', 'noise irritating', 'sound annoying', 'noise annoying',
+            'sound bad', 'noise bad', 'sound terrible', 'noise terrible',
+            'sound problem', 'noise problem', 'sound issue', 'noise issue',
+            'irritating sound', 'annoying sound', 'bad sound', 'terrible sound',
+            'irritating noise', 'annoying noise', 'bad noise', 'terrible noise'
         ]
         
         # Negative phrase patterns that contain multiple words
@@ -613,19 +669,73 @@ class AdvancedSentimentClassifier:
             r'nahi.*lena.*chahiye',
             r'नहीं.*लेना.*चाहिए',
             r'avoid.*this.*vehicle',
-            r'stay.*away.*from'
+            r'stay.*away.*from',
+            # Negation + positive word patterns (should be negative)
+            r'don\'t.*like.*sound',
+            r'dont.*like.*sound',
+            r'don\'t.*like.*noise',
+            r'dont.*like.*noise',
+            r'don\'t.*like.*scooter',
+            r'dont.*like.*scooter',
+            r'not.*like.*sound',
+            r'not.*like.*noise',
+            r'not.*like.*scooter'
+        ]
+        
+        # Information seeking patterns (should be neutral)
+        information_seeking_patterns = [
+            'interested to know', 'want to know', 'information about', 'info about', 'details about',
+            'sales of', 'sales number', 'sales data', 'sales figures', 'sales information',
+            'numbers of', 'data of', 'statistics of', 'stats of', 'figures of',
+            'range of', 'number range', 'companies which are', 'companies in range',
+            'lesser known', 'unknown companies', 'small companies', 'tier 2 companies',
+            'nothing new', 'everywhere available', 'top 5 or top 10', 'research purpose',
+            'analysis purpose', 'study purpose', 'comparison data', 'market data'
+        ]
+        
+        # Question/inquiry patterns (should be neutral)
+        question_patterns = [
+            'which one is best', 'which is best', 'what is best', 'kya best hai', 'kaun sa best',
+            'your opinion', 'plzzz rply', 'please reply', 'pls reply', 'reply pls', 'rply pls',
+            'give me opinion', 'bata do', 'batao na', 'suggest kar do', 'recommend kar do',
+            'vs comparison', 'or comparison', 'between', ' or ', ' vs ', 'comparison karna',
+            'compare karna', 'kaun lena chahiye', 'kya lena chahiye', 'which to choose'
+        ]
+        
+        # Irrelevant/Off-topic patterns (should be neutral for EV analysis)
+        irrelevant_patterns = [
+            'petrol scooter', 'petrol scooty', 'petrol bike', 'petrol vehicle', 'petrol two wheeler',
+            'diesel scooter', 'diesel bike', 'diesel vehicle', 'diesel two wheeler',
+            'cng scooter', 'cng bike', 'cng vehicle', 'cng two wheeler',
+            'fuel scooter', 'fuel bike', 'fuel vehicle', 'fuel scooty',
+            'gas scooter', 'gas bike', 'gas vehicle', 'gas scooty',
+            'i like petrol', 'love petrol', 'prefer petrol', 'petrol is better',
+            'i like diesel', 'love diesel', 'prefer diesel', 'diesel is better',
+            'i like fuel', 'love fuel', 'prefer fuel', 'fuel is better',
+            'non electric', 'not electric', 'traditional scooter', 'traditional bike',
+            'conventional scooter', 'conventional bike', 'conventional vehicle',
+            'गैसोलीन स्कूटर', 'पेट्रोल स्कूटर', 'डीजल स्कूटर',
+            'bike chahiye petrol', 'scooter chahiye petrol', 'petrol wala chahiye'
         ]
         
         is_advice_request = any(pattern in text_lower for pattern in advice_patterns)
-        has_strong_negative = any(pattern in text_lower for pattern in strong_negative_patterns)
+        is_information_seeking = any(pattern in text_lower for pattern in information_seeking_patterns)
+        is_question = any(pattern in text_lower for pattern in question_patterns)
+        is_irrelevant = any(pattern in text_lower for pattern in irrelevant_patterns)
         
-        # Check for context-aware recommendations
-        has_positive_recommendation = any(pattern in text_lower for pattern in positive_recommendation_patterns)
-        has_negative_recommendation = any(pattern in text_lower for pattern in negative_recommendation_patterns)
-        
-        # Override advice request detection for context-aware recommendations
-        if has_positive_recommendation or has_negative_recommendation:
-            is_advice_request = False  # This is sentiment, not advice request
+        # Check for strong negative patterns with word boundaries to avoid false matches
+        has_strong_negative = False
+        import re
+        for pattern in strong_negative_patterns:
+            # Use word boundary for single words, exact match for phrases
+            if ' ' in pattern:  # Multi-word phrase
+                if pattern in text_lower:
+                    has_strong_negative = True
+                    break
+            else:  # Single word - use word boundary
+                if re.search(r'\b' + re.escape(pattern) + r'\b', text_lower):
+                    has_strong_negative = True
+                    break
         
         # Check for negative phrase patterns using regex
         has_negative_phrase = False
@@ -822,8 +932,6 @@ class AdvancedSentimentClassifier:
             'bahut achha': 'positive',    # very good
             'bahut accha': 'positive',    # very good
             'bhot accha': 'positive',     # very good (informal)
-            'dil se': 'positive',         # from the heart
-            'दिल से': 'positive',         # from the heart
             'gadi hai': 'neutral',        # vehicle is (context dependent)
             'गाडी है': 'neutral',         # vehicle is (context dependent)
             'bhot badhiya': 'positive',   # very good (informal)
@@ -839,53 +947,49 @@ class AdvancedSentimentClassifier:
             'bhot sahi': 'positive',      # very right/good (informal)
             'बहुत सही': 'positive',       # very right/good
             'bahut sahi': 'positive',     # very right/good
-            # Context-aware recommendation patterns
-            'dil se recommend': 'positive',     # heartfelt recommendation
-            'दिल से recommend': 'positive',     # heartfelt recommendation
-            'dil se suggest': 'positive',       # heartfelt suggestion
-            'heartily recommend': 'positive',   # strong positive recommendation
-            'strongly recommend': 'positive',   # strong positive recommendation
-            'highly recommend': 'positive',     # strong positive recommendation
-            'definitely recommend': 'positive', # definite positive recommendation
-            'really recommend': 'positive',     # strong positive recommendation
-            'zaroor recommend': 'positive',     # definitely recommend
-            'जरूर recommend': 'positive',       # definitely recommend
-            'bilkul recommend': 'positive',     # absolutely recommend
-            'बिल्कुल recommend': 'positive',    # absolutely recommend
-            # Context-aware negative recommendation patterns
-            'dil se mana': 'negative',          # refuse from heart
-            'दिल से मना': 'negative',           # refuse from heart
-            'dil se mat': 'negative',           # don't from heart
-            'दिल से मत': 'negative',            # don't from heart
-            'never recommend': 'negative',      # never recommend
-            'dont recommend': 'negative',       # don't recommend
-            "don't recommend": 'negative',      # don't recommend
-            'avoid recommend': 'negative',      # avoid recommending
-            'mat recommend': 'negative',        # don't recommend
-            'मत recommend': 'negative',         # don't recommend
-            'kabhi mat': 'negative',            # never
-            'कभी मत': 'negative',               # never
-            'bilkul mat': 'negative',           # absolutely don't
-            'बिल्कुल मत': 'negative'            # absolutely don't
+            # Contextual "dil se" patterns - positive contexts
+            'dil se recommend': 'positive',    # heartfelt recommendation
+            'dil se suggest': 'positive',      # heartfelt suggestion
+            'dil se bolta hun': 'positive',    # speaking from heart (usually positive advice)
+            'dil se kehta hun': 'positive',    # saying from heart (usually positive)
+            'dil se pasand': 'positive',       # like from heart
+            'dil se khush': 'positive',        # happy from heart
+            'दिल से रेकमेंड': 'positive',      # heartfelt recommendation
+            'दिल से सुझाव': 'positive',       # heartfelt suggestion
+            # Contextual "dil se" patterns - negative contexts  
+            'dil se mana': 'negative',         # heartfelt refusal/warning
+            'dil se mana karta': 'negative',   # heartfelt refusal
+            'dil se mat lo': 'negative',       # heartfelt warning not to take
+            'dil se avoid': 'negative',        # heartfelt avoidance advice
+            'dil se warning': 'negative',      # heartfelt warning
+            'dil se bol raha': 'context_dependent', # depends on what follows
+            'दिल से मना': 'negative',          # heartfelt refusal
+            'दिल से चेतावनी': 'negative'       # heartfelt warning
         }
         
-        # Apply transliteration corrections first
+        # Apply transliteration corrections first with contextual analysis
         for word, sentiment in transliteration_corrections.items():
             if word in text_lower:
-                if sentiment == 'positive':
-                    # Give extra weight to context-aware positive recommendations
-                    if any(rec_pattern in word for rec_pattern in ['dil se recommend', 'heartily recommend', 'strongly recommend', 'highly recommend']):
-                        positive_score += 3.0  # Strong positive for context-aware recommendations
-                    else:
-                        positive_score += 2.0  # Increased weight for positive informal patterns
+                # Handle context-dependent patterns
+                if sentiment == 'context_dependent':
+                    if word == 'dil se bol raha':
+                        # Check what follows "dil se bol raha"
+                        if any(neg_word in text_lower for neg_word in ['mat', 'mana', 'avoid', 'warning', 'beware', 'dont', 'nahi']):
+                            negative_score += 1.5
+                            sentiment_words.append({'word': word, 'sentiment': 'negative', 'language': 'transliteration_contextual'})
+                        elif any(pos_word in text_lower for pos_word in ['recommend', 'suggest', 'achha', 'good', 'badhiya', 'mast']):
+                            positive_score += 2.0
+                            sentiment_words.append({'word': word, 'sentiment': 'positive', 'language': 'transliteration_contextual'})
+                        # If neutral context, treat as neutral - no score change
+                elif sentiment == 'positive':
+                    positive_score += 2.0  # Increased weight for positive informal patterns
                     sentiment_words.append({'word': word, 'sentiment': 'positive', 'language': 'transliteration'})
-                else:
-                    # Give extra weight to context-aware negative recommendations
-                    if any(neg_pattern in word for neg_pattern in ['dil se mana', 'dil se mat', 'never recommend', 'dont recommend']):
-                        negative_score += 3.0  # Strong negative for context-aware refusals
-                    else:
-                        negative_score += 1
+                else:  # negative
+                    negative_score += 1
                     sentiment_words.append({'word': word, 'sentiment': 'negative', 'language': 'transliteration'})
+        
+        # Additional contextual analysis for complex patterns
+        positive_score, negative_score = self._apply_contextual_sentiment_analysis(text_lower, positive_score, negative_score, sentiment_words)
         
         # Analyze English patterns with word boundary checks
         if language_info['primary_language'] == 'english' or 'english' in language_info['languages']:
@@ -934,38 +1038,50 @@ class AdvancedSentimentClassifier:
         positive_score *= intensity_multiplier
         negative_score *= intensity_multiplier
         
-        # Calculate final sentiment with advice request consideration
+        # Calculate final sentiment with improved neutral detection
         total_score = positive_score + negative_score
         
-        # Context-aware positive recommendations should be positive (highest priority)
-        if has_positive_recommendation and positive_score > 0:
-            sentiment = 'positive'
-            confidence = min(0.95, 0.8 + (positive_score / max(total_score, 1)) * 0.15)
-        # Context-aware negative recommendations should be negative
-        elif has_negative_recommendation or has_strong_negative or has_negative_phrase:
+        # Determine if this is a neutral request/question
+        is_neutral_request = is_advice_request or is_information_seeking or is_question or is_irrelevant
+        
+        # Strong negative or negative phrases override everything
+        if (has_strong_negative or has_negative_phrase) and not is_neutral_request:
             # Even if no negative words detected, negative phrases should make it negative
-            if negative_score == 0 and (has_strong_negative or has_negative_phrase or has_negative_recommendation):
+            if negative_score == 0 and (has_strong_negative or has_negative_phrase):
                 negative_score = 3.0  # Strong negative assignment for phrase patterns
                 total_score = positive_score + negative_score
             elif negative_score > 0:
-                negative_score += 1.0  # Boost existing negative score  
+                negative_score += 2.0  # Boost existing negative score
                 total_score = positive_score + negative_score
             sentiment = 'negative'
             confidence = min(0.95, 0.8 + (negative_score / max(total_score, 1)) * 0.15)
-        elif is_advice_request and not has_strong_negative and not has_negative_phrase and not has_positive_recommendation and not has_negative_recommendation:
-            # For advice requests, bias towards neutral unless strong sentiment
-            # But don't override strong positive informal patterns (score >= 1.8)
-            if total_score == 0 or (abs(positive_score - negative_score) < 1 and positive_score < 1.8):
+        elif (has_strong_negative or has_negative_phrase) and is_neutral_request:
+            # Even neutral requests with strong negative should be negative
+            if negative_score == 0:
+                negative_score = 2.5
+                total_score = positive_score + negative_score
+            elif negative_score > 0:
+                negative_score += 1.5
+                total_score = positive_score + negative_score
+            sentiment = 'negative'
+            confidence = min(0.9, 0.7 + (negative_score / max(total_score, 1)) * 0.2)
+        elif is_neutral_request and not has_strong_negative and not has_negative_phrase:
+            # For neutral requests (advice, information seeking, questions, irrelevant content), strongly bias towards neutral
+            # Only override if there's very strong sentiment (score > 2.5)
+            if total_score == 0 or (abs(positive_score - negative_score) < 2.5 and max(positive_score, negative_score) < 2.5):
                 sentiment = 'neutral'
-                confidence = 0.7  # High confidence for advice requests
-            elif positive_score > negative_score + 0.5 or positive_score >= 1.8:  # Strong positive override (lowered threshold)
+                confidence = 0.85  # High confidence for neutral requests
+            elif positive_score > negative_score and positive_score > 2.5:  # Strong positive override
                 sentiment = 'positive'
-                confidence = min(0.9, 0.5 + (positive_score - negative_score) / total_score * 0.3)
-            else:
+                confidence = min(0.8, 0.4 + (positive_score - negative_score) / total_score * 0.2)
+            elif negative_score > positive_score and negative_score > 2.5:  # Strong negative override
                 sentiment = 'negative'
-                confidence = min(0.9, 0.5 + (negative_score - positive_score) / total_score * 0.3)
+                confidence = min(0.8, 0.4 + (negative_score - positive_score) / total_score * 0.2)
+            else:
+                sentiment = 'neutral'
+                confidence = 0.8
         else:
-            # Regular sentiment calculation with negative bias
+            # Regular sentiment calculation with negative bias for non-neutral texts
             if total_score == 0:
                 sentiment = 'neutral'
                 confidence = 0.3
@@ -984,10 +1100,12 @@ class AdvancedSentimentClassifier:
             'intensity_multiplier': round(intensity_multiplier, 2),
             'sentiment_words': sentiment_words,
             'is_advice_request': is_advice_request,
+            'is_information_seeking': is_information_seeking,
+            'is_question': is_question,
+            'is_irrelevant': is_irrelevant,
+            'is_neutral_request': is_neutral_request,
             'has_strong_negative': has_strong_negative,
-            'has_negative_phrase': has_negative_phrase,
-            'has_positive_recommendation': has_positive_recommendation,
-            'has_negative_recommendation': has_negative_recommendation
+            'has_negative_phrase': has_negative_phrase
         }
 
     def detect_sarcasm_advanced(self, text: str, emoji_info: Dict, company_info: Dict) -> Dict[str, Any]:
@@ -1158,6 +1276,31 @@ class AdvancedSentimentClassifier:
                 relevance_boost = company_info['all_mentions'][target_oem]['confidence'] * 0.1
                 base_confidence += relevance_boost
                 factors.append(f"target_company_relevance: +{relevance_boost:.2f}")
+            elif target_oem and target_oem not in company_info['all_mentions']:
+                # This comment mentions other companies but not the target (off-topic)
+                # Check for wrong brand context like "Like for ola" in VIDA thread
+                mentioned_brands = list(company_info['all_mentions'].keys())
+                if mentioned_brands and any(brand.lower() != target_oem.lower() for brand in mentioned_brands):
+                    # Comment about different brand in wrong context - should be neutral
+                    if base_sentiment == 'positive' and any(
+                        pattern in pattern_sentiment.get('sentiment_words', []) 
+                        for pattern in ['like', 'love', 'good', 'best']
+                    ):
+                        base_sentiment = 'neutral'
+                        base_confidence = 0.8
+                        factors.append(f"wrong_brand_context: {mentioned_brands} in {target_oem} thread -> neutral")
+        
+        # Brand context neutralization for simple positive mentions
+        if (base_sentiment == 'positive' and target_oem and 
+            company_info.get('has_mentions') and 
+            pattern_sentiment.get('positive_score', 0) < 2.0):  # Weak positive sentiment
+            
+            mentioned_companies = company_info.get('all_mentions', {})
+            if mentioned_companies and target_oem not in mentioned_companies:
+                # Simple positive statement about wrong brand
+                base_sentiment = 'neutral'
+                base_confidence = 0.75
+                factors.append(f"off_topic_brand_mention: -> neutral")
             elif company_info['primary_company'] != target_oem:
                 # This comment is about a different company
                 base_confidence *= 0.7  # Reduce confidence for misattributed sentiment

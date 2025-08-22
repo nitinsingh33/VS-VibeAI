@@ -457,5 +457,26 @@
     "oems_mentioned": [],
     "error_occurred": true,
     "error_message": "Response generation failed: 429 You exceeded your current quota. Please migrate to Gemini 2.0 Flash Preview (Image Generation) (models/gemini-2.0-flash-preview-image-generation) for higher quota limits. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. [violations {\n  quota_metric: \"generativelanguage.googleapis.com/generate_content_paid_tier_input_token_count\"\n  quota_id: \"GenerateContentPaidTierInputTokensPerModelPerMinute\"\n  quota_dimensions {\n    key: \"model\"\n    value: \"gemini-2.0-flash-exp\"\n  }\n  quota_dimensions {\n    key: \"location\"\n    value: \"global\"\n  }\n  quota_value: 250000\n}\n, links {\n  description: \"Learn more about Gemini API quotas\"\n  url: \"https://ai.google.dev/gemini-api/docs/rate-limits\"\n}\n, retry_delay {\n  seconds: 6\n}\n]"
+  },
+  {
+    "timestamp": "2025-08-20T16:34:57.375232",
+    "query_id": "f57a4f18-b5da-4ede-a9f0-4003094a5d35",
+    "user_query": "What is the sentiment analysis for Ola Electric? Include recent user feedback.",
+    "response_preview": "Of course. Here is a comprehensive sentiment analysis for Ola Electric, based on the latest available user feedback and market intelligence.\n\n### **Executive Summary**\n\nOla Electric's market sentiment...",
+    "processing_time": 76.99189686775208,
+    "analysis_method": "enhanced_search",
+    "confidence_level": null,
+    "total_comments": null,
+    "export_requested": true,
+    "user_ip": "127.0.0.1",
+    "user_agent": "curl/7.88.1",
+    "session_id": "515c1a29-8450-44c1-8d83-7997ed833b2d",
+    "response_length": 6639,
+    "temporal_analysis_used": false,
+    "oems_mentioned": [
+      "Ola Electric"
+    ],
+    "error_occurred": false,
+    "error_message": null
   }
 ]
