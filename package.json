@@ -1,12 +1,13 @@
 {
-  "name": "vibeai-search-agent-python",
+  "name": "solysai-netlify",
   "version": "1.0.0",
-  "description": "A Python AI agent that searches for information using Google/Serper API and generates responses using Gemini 2.0 Flash",
-  "main": "main.py",
+  "description": "SolysAI FastAPI app deployed on Netlify",
+  "main": "netlify/functions/api.py",
   "scripts": {
+    "build": "echo 'Build complete'",
     "install": "pip install -r requirements.txt",
     "start": "python main.py",
-    "dev": "python -m flask --app main.py run --debug",
+    "dev": "python -m uvicorn main:app --reload",
     "test": "python -m pytest tests/"
   },
   "keywords": [
@@ -15,12 +16,17 @@
     "gemini",
     "serper",
     "agent",
-    "python"
+    "python",
+    "netlify",
+    "fastapi"
   ],
   "author": "",
   "license": "MIT",
   "dependencies": {
     "express": "^5.1.0",
     "http-proxy-middleware": "^3.0.5"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }
