@@ -76,7 +76,9 @@ class AdvancedSentimentClassifier:
             '👍': 0.8, '👌': 0.7, '👏': 0.8, '🙌': 0.8, '💯': 0.9, '✨': 0.7,
             '⭐': 0.8, '🌟': 0.8, '💫': 0.7, '🔥': 0.8, '💪': 0.8, '🚀': 0.9,
             '❤️': 0.9, '💖': 0.9, '💕': 0.8, '💗': 0.8, '💓': 0.8, '💝': 0.8,
-            '😂': 0.8, '🤣': 0.8, '😹': 0.7, '😻': 0.8, '🥳': 0.9, '🎉': 0.8,
+            
+            # Laughing emojis (moved from positive to context-dependent)
+            '😂': 0.3, '🤣': 0.3, '😹': 0.2, '😻': 0.8, '🥳': 0.9, '🎉': 0.8,
             
             # Negative emojis
             '😠': -0.8, '😡': -0.9, '🤬': -0.9, '😤': -0.7, '😒': -0.6, '🙄': -0.5,
@@ -226,7 +228,11 @@ class AdvancedSentimentClassifier:
                 'start nahi', 'start nhi', 'nahi hogi', 'nhi hogi', 'nahi karegi',
                 'nhi karegi', 'bigjaye', 'bigad jaye', 'bigad gaye', 'kharab ho',
                 'problem aa', 'issue aa', 'barish ma', 'barish me', 'switches kaam',
-                'chور', 'chor', 'चोर कंपनी', 'chor company', 'चोर कम्पनी'
+                'chور', 'chor', 'चोर कंपनी', 'chor company', 'चोर कम्पनी',
+                # Frustration patterns
+                'samjhti kyu nahi', 'समझती क्यों नहीं', 'kyun nahi samjhte', 'क्यों नहीं समझते',
+                'samjhte kyu nahi', 'समझते क्यों नहीं', 'company samjhti nahi', 'कंपनी समझती नहीं',
+                'koi company', 'कोई कंपनी', 'kyu nahi', 'क्यों नहीं', 'kyun nahi', 'क्यूं नहीं'
             ]
         }
         
@@ -538,6 +544,13 @@ class AdvancedSentimentClassifier:
             'buying mistake', 'design problem', 'design issue', 'design flaw',
             'seat problem', 'uncomfortable seat', 'bad design', 'poor design',
             'faulty design',
+            # Issue-related patterns
+            'main issue', 'मुख्य समस्या', 'badi samasya', 'बड़ी समस्या',
+            'major issue', 'major problem', 'big issue', 'big problem',
+            'serious issue', 'serious problem', 'critical issue', 'critical problem',
+            # Range-related issues
+            'range issue', 'range problem', 'range is issue', 'range is problem',
+            'range main issue', 'range ki samasya', 'रेंज की समस्या', 'रेंज इश्यू',
             # New critical patterns from user examples
             'बरोबर नही', 'बरोबर नहीं', 'barobar nahi', 'barobar nhi',
             'सर्विस बरोबर नही', 'service barobar nahi', 'service barobar nhi',
@@ -561,7 +574,15 @@ class AdvancedSentimentClassifier:
             'sound bad', 'noise bad', 'sound terrible', 'noise terrible',
             'sound problem', 'noise problem', 'sound issue', 'noise issue',
             'irritating sound', 'annoying sound', 'bad sound', 'terrible sound',
-            'irritating noise', 'annoying noise', 'bad noise', 'terrible noise'
+            'irritating noise', 'annoying noise', 'bad noise', 'terrible noise',
+            # Sarcastic negative patterns
+            'will never run', 'never run on road', 'never work on road', 'wont work on road',
+            'it will never', 'never run on indian road', 'never work on indian road',
+            'just enjoy video', 'enjoy video never', 'video enjoy never',
+            # Chinese product negativity
+            'chinese maal', 'chinese product', 'chinese copy', 'chinese duplicate',
+            'made in china', 'china ka maal', 'china product', 'cheap chinese',
+            'चाइनीज माल', 'चीनी माल', 'चीन का माल', 'चाइना प्रोडक्ट'
         ]
         
         # Negative phrase patterns that contain multiple words
@@ -679,7 +700,30 @@ class AdvancedSentimentClassifier:
             r'dont.*like.*scooter',
             r'not.*like.*sound',
             r'not.*like.*noise',
-            r'not.*like.*scooter'
+            r'not.*like.*scooter',
+            # Sarcastic patterns
+            r'just.*enjoy.*video',
+            r'enjoy.*video.*never',
+            r'will.*never.*run',
+            r'never.*run.*on.*road',
+            r'never.*work.*on.*road',
+            r'wont.*work.*on.*road',
+            r'it.*will.*never',
+            r'never.*run.*on.*indian.*road',
+            r'never.*work.*on.*indian.*road',
+            # Chinese product negativity patterns
+            r'chinese.*maal',
+            r'chinese.*product',
+            r'chinese.*copy',
+            r'chinese.*duplicate',
+            r'made.*in.*china',
+            r'china.*ka.*maal',
+            r'china.*product',
+            r'cheap.*chinese',
+            r'चाइनीज.*माल',
+            r'चीनी.*माल',
+            r'चीन.*का.*माल',
+            r'चाइना.*प्रोडक्ट'
         ]
         
         # Information seeking patterns (should be neutral)
@@ -715,7 +759,18 @@ class AdvancedSentimentClassifier:
             'non electric', 'not electric', 'traditional scooter', 'traditional bike',
             'conventional scooter', 'conventional bike', 'conventional vehicle',
             'गैसोलीन स्कूटर', 'पेट्रोल स्कूटर', 'डीजल स्कूटर',
-            'bike chahiye petrol', 'scooter chahiye petrol', 'petrol wala chahiye'
+            'bike chahiye petrol', 'scooter chahiye petrol', 'petrol wala chahiye',
+            # Off-topic personal comments and jokes
+            'namkaran', 'naming', 'name', 'wife ko yaad', 'wife ko jyada yaad',
+            'enjoy video', 'just enjoy', 'video enjoy', 'enjoy the video',
+            'yrr', 'yaar', 'bro', 'dude', 'buddy', 'friend',
+            # Number corrections and factual statements
+            'nahi 26', 'nahi 36', 'matlab 50 km', 'matlab 200 km',
+            'battery matlab', 'bharat ko time', 'time lagega', 'aage badhne',
+            '1 battery matlab', '4 battery matlab', 'bharat ko time lagega',
+            'abhi electric me', 'electric me aage', 'aage badhne me',
+            # Random expressions and names
+            'haha', 'lol', 'lmao', 'rofl', 'hehe', 'hihi'
         ]
         
         is_advice_request = any(pattern in text_lower for pattern in advice_patterns)
@@ -736,6 +791,33 @@ class AdvancedSentimentClassifier:
                 if re.search(r'\b' + re.escape(pattern) + r'\b', text_lower):
                     has_strong_negative = True
                     break
+        
+        # Additional strong negative detection for RANGE issues
+        range_issue_patterns = [
+            r'range.*is.*main.*issue',
+            r'range.*is.*issue',
+            r'main.*issue.*range',
+            r'issue.*range',
+            r'range.*problem',
+            r'problem.*range',
+            r'range.*terrible',
+            r'range.*bad',
+            r'range.*worst',
+            r'range.*disappointing',
+            r'range.*pathetic',
+            r'range.*useless',
+            r'samjhti.*kyu.*nahi',
+            r'समझती.*क्यों.*नहीं',
+            r'kyun.*nahi.*samjhte',
+            r'क्यों.*नहीं.*समझते',
+            r'company.*samjhti.*nahi',
+            r'कंपनी.*समझती.*नहीं'
+        ]
+        
+        for pattern in range_issue_patterns:
+            if re.search(pattern, text_lower):
+                has_strong_negative = True
+                break
         
         # Check for negative phrase patterns using regex
         has_negative_phrase = False
@@ -1042,10 +1124,20 @@ class AdvancedSentimentClassifier:
         total_score = positive_score + negative_score
         
         # Determine if this is a neutral request/question
-        is_neutral_request = is_advice_request or is_information_seeking or is_question or is_irrelevant
+        is_neutral_request = is_advice_request or is_information_seeking or is_question
         
+        # Check irrelevant content first (highest priority for neutralization)
+        if is_irrelevant:
+            # For irrelevant content, force neutral unless very strong negative sentiment
+            if has_strong_negative or has_negative_phrase or negative_score > 3.0:
+                sentiment = 'negative'
+                confidence = min(0.8, 0.6 + (negative_score / max(total_score, 1)) * 0.2)
+            else:
+                # Force neutral for irrelevant content regardless of mild positive/negative scores
+                sentiment = 'neutral'
+                confidence = 0.9  # Very high confidence for irrelevant content being neutral
         # Strong negative or negative phrases override everything
-        if (has_strong_negative or has_negative_phrase) and not is_neutral_request:
+        elif (has_strong_negative or has_negative_phrase) and not is_neutral_request:
             # Even if no negative words detected, negative phrases should make it negative
             if negative_score == 0 and (has_strong_negative or has_negative_phrase):
                 negative_score = 3.0  # Strong negative assignment for phrase patterns
@@ -1250,8 +1342,19 @@ class AdvancedSentimentClassifier:
         # Emoji influence
         emoji_influence = 0.0
         if emoji_info['has_emojis']:
-            emoji_influence = emoji_info['emoji_sentiment_score'] * 0.3  # 30% weight
+            emoji_influence = emoji_info['emoji_sentiment_score'] * 0.5  # Increased to 50% weight
             factors.append(f"emoji_influence: {emoji_influence:.2f}")
+            
+            # Strong emoji override for very negative emojis
+            if emoji_info['emoji_sentiment_score'] <= -0.8:  # Very negative emojis like 😡
+                if base_sentiment == 'neutral':
+                    base_sentiment = 'negative'
+                    base_confidence = max(base_confidence, 0.8)
+                    factors.append("strong_negative_emoji_override: neutral -> negative")
+                elif base_sentiment == 'positive':
+                    base_sentiment = 'negative' 
+                    base_confidence = max(base_confidence, 0.75)
+                    factors.append("strong_negative_emoji_override: positive -> negative")
         
         # Sarcasm adjustment
         if sarcasm_info['sarcasm_detected']:
@@ -1263,6 +1366,27 @@ class AdvancedSentimentClassifier:
                 base_sentiment = 'negative'
                 base_confidence = 0.6
                 factors.append("sarcasm_flip: neutral -> negative (emoji positive)")
+        
+        # Irrelevant content override (highest priority for neutralization)
+        if pattern_sentiment.get('is_irrelevant', False):
+            # For irrelevant content, force neutral unless very strong negative
+            if (pattern_sentiment.get('has_strong_negative', False) or 
+                pattern_sentiment.get('has_negative_phrase', False) or 
+                pattern_sentiment.get('negative_score', 0) > 3.0):
+                base_sentiment = 'negative'
+                base_confidence = max(base_confidence, 0.8)
+                factors.append("irrelevant_strong_negative_override: -> negative")
+            else:
+                base_sentiment = 'neutral'
+                base_confidence = 0.9  # Very high confidence for irrelevant being neutral
+                factors.append("irrelevant_content_override: -> neutral")
+                # Skip further processing for irrelevant content
+                return {
+                    'sentiment': base_sentiment,
+                    'confidence': round(base_confidence, 3),
+                    'factors': factors,
+                    'final_score': 0.0
+                }
         
         # Engagement amplification
         if engagement_info['engagement_level'] in ['high', 'viral']:
