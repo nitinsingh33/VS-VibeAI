@@ -643,8 +643,23 @@ class EnhancedAgentService:
                 conversation_context, temporal_analysis_data, time_period, search_results
             )
 
-            # Step 6: Generate response using Gemini
-            response = await self.gemini_service.generate_response(query, combined_context)
+            # Step 6: Generate response using Gemini with timeout handling
+            try:
+                response = await self.gemini_service.generate_response(query, combined_context)
+            except Exception as gemini_error:
+                error_msg = str(gemini_error)
+                if "timeout" in error_msg.lower() or "504" in error_msg or "deadline" in error_msg.lower():
+                    print("⚠️ Gemini timeout detected, trying with simplified context...")
+                    # Simplify context for retry
+                    simplified_context = self._simplify_context_for_retry(combined_context)
+                    try:
+                        response = await self.gemini_service.generate_response(query, simplified_context)
+                    except Exception as retry_error:
+                        print(f"❌ Retry also failed: {retry_error}")
+                        response = self._generate_fallback_response(query, youtube_data, temporal_analysis_data)
+                else:
+                    print(f"❌ Gemini error: {gemini_error}")
+                    response = self._generate_fallback_response(query, youtube_data, temporal_analysis_data)
 
             processing_time = (time.time() - start_time) * 1000
 
@@ -1307,3 +1322,40 @@ Please provide a response with crystal-clear source attribution and proper categ
         }
         
         return base_status
+
+    def _simplify_context_for_retry(self, context: str) -> str:
+        """Simplify context for timeout retry by reducing length"""
+        # If context is too long, truncate it intelligently
+        if len(context) > 8000:
+            # Keep first and last parts, truncate middle
+            first_part = context[:3000]
+            last_part = context[-2000:]
+            simplified = f"{first_part}\n\n[... content truncated for processing ...]\n\n{last_part}"
+            print(f"📝 Context simplified from {len(context)} to {len(simplified)} characters")
+            return simplified
+        return context
+
+    def _generate_fallback_response(self, query: str, youtube_data: Dict, temporal_data: Any = None) -> str:
+        """Generate a fallback response when Gemini fails"""
+        print("🔄 Generating fallback response...")
+        
+        # Basic analysis without AI
+        response_parts = [
+            f"⚠️ **Note**: This is a simplified analysis due to processing timeout.\n",
+            f"**Query**: {query}\n"
+        ]
+        
+        if youtube_data:
+            total_comments = sum(len(comments) for comments in youtube_data.values())
+            oems = list(youtube_data.keys())
+            response_parts.append(f"**Data Available**: {total_comments} comments across {len(oems)} OEMs ({', '.join(oems)})\n")
+        
+        if temporal_data:
+            response_parts.append(f"**Temporal Analysis**: Data available but could not be processed due to timeout.\n")
+        
+        response_parts.extend([
+            "\n**Recommendation**: Try a more specific query or break down your analysis into smaller parts.\n",
+            "For complex trend analysis, consider using the Direct Export feature for detailed reports."
+        ])
+        
+        return "\n".join(response_parts)

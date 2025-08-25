@@ -78,7 +78,7 @@ python3 standalone_exporter.py comparison excel "Ola Electric,Ather,TVS iQube"
 ## 🔧 Technical Implementation
 
 ### API Configuration
-- **Gemini API:** ✅ Configured (AIzaSyCePPH4-B5yFlbA1PnwOy3kLsF_EkWxxUg)
+- **Gemini API:** ✅ Configured (AIzaSyCyvkLJ4xyoOb79iYWl-MtCAbBdNj0AY6A)
 - **Serper API:** ✅ Configured (2b6904d1a2b3c9d94b6c57af34089b64ec813e52)
 - **Environment:** All keys properly set in `.env`
 

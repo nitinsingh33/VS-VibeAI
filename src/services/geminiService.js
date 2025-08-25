@@ -17,15 +17,15 @@ class GeminiService {
     try {
       this.genAI = new GoogleGenerativeAI(this.apiKey);
       this.model = this.genAI.getGenerativeModel({ 
-        model: "gemini-2.0-flash-exp",
+        model: "gemini-2.5-pro",
         generationConfig: {
-          temperature: 0.7,
-          topP: 0.9,
-          topK: 40,
-          maxOutputTokens: 2048,
+          temperature: 0.6,
+          topP: 0.85,
+          topK: 32,
+          maxOutputTokens: 4096,
         }
       });
-      console.log('✅ Gemini 2.0 Flash model initialized');
+      console.log('✅ Gemini 2.5 Pro model initialized');
     } catch (error) {
       console.error('Failed to initialize Gemini model:', error.message);
       throw error;

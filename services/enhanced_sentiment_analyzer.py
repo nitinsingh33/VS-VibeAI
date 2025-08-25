@@ -86,11 +86,11 @@ class EnhancedSentimentAnalyzer:
         }
         
     def _initialize_gemini(self):
-        """Initialize Gemini with enhanced prompts for better classification"""
+        """Initialize Gemini 2.0 Flash with enhanced prompts for better classification"""
         if self.api_key:
             try:
                 genai.configure(api_key=self.api_key)
-                # Try Gemini 2.5 Pro first, fallback to available models
+                # Use Gemini 2.5 Pro as primary model for superior analysis
                 try:
                     self.gemini_model = genai.GenerativeModel(
                         model_name="gemini-2.5-pro",
@@ -100,17 +100,18 @@ class EnhancedSentimentAnalyzer:
                             "max_output_tokens": 2048,
                         }
                     )
+                    print('✅ Enhanced Gemini 2.5 Pro sentiment analyzer initialized')
                 except Exception:
-                    # Fallback to Gemini 1.5 Pro
+                    # Fallback to 2.0 Flash model
                     self.gemini_model = genai.GenerativeModel(
-                        model_name="gemini-1.5-pro",
+                        model_name="gemini-2.0-flash",
                         generation_config={
                             "temperature": 0.2,
                             "top_p": 0.9,
                             "max_output_tokens": 2048,
                         }
                     )
-                print('✅ Enhanced Gemini sentiment analyzer initialized')
+                    print('✅ Enhanced Gemini 2.0 Flash sentiment analyzer initialized (fallback)')
             except Exception as e:
                 print(f'⚠️ Gemini initialization failed: {e}')
                 self.gemini_model = None

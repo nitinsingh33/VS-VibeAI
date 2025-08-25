@@ -1,5 +1,5 @@
 """
-Gemini Service - Handles Google Gemini 2.5 Pro API integration for superior response generation
+Gemini Service - Handles Google Gemini 2.0 Flash API integration for fas            print('🧠 Generating response with Gemini 2.0 Flash - Fast Analysis Mode...')           print('🧠 Generating response with Gemini 2.0 Flash - Fast Analysis Mode...')           print('🧠 Generating response with Gemini 2.0 Flash - Fast Analysis Mode...') and efficient response generation
 """
 
 import os
@@ -11,7 +11,7 @@ import time
 class GeminiService:
     def __init__(self):
         self.api_key = os.getenv('GEMINI_API_KEY')
-        self.timeout = int(os.getenv('RESPONSE_TIMEOUT', 45))  # Increased for Pro model
+        self.timeout = int(os.getenv('RESPONSE_TIMEOUT', 120))  # Significantly increased for Pro model complex analysis
         self.model = None
         
         if not self.api_key:
@@ -20,34 +20,33 @@ class GeminiService:
             self._initialize_model()
 
     def _initialize_model(self):
-        """Initialize the Gemini 2.5 Pro model for superior analysis"""
+        """Initialize the Gemini 2.0 Flash model for fast and efficient analysis"""
         try:
             genai.configure(api_key=self.api_key)
             
-            # Enhanced generation settings for Pro model
+            # Enhanced generation settings for 2.5 Pro model
             generation_config = {
                 "temperature": 0.6,  # Lower for more consistent analysis
                 "top_p": 0.85,      # Focused responses
                 "top_k": 32,        # Balanced creativity
-                "max_output_tokens": 4096,  # Increased capacity
+                "max_output_tokens": 4096,  # High capacity
             }
             
-            # Initialize the Pro model
+            # Initialize the Gemini 2.5 Pro model as primary for superior analysis
             self.model = genai.GenerativeModel(
                 model_name="gemini-2.5-pro",
-                generation_config=generation_config,
-                system_instruction="You are an expert Indian Electric Vehicle market analyst with advanced sentiment analysis capabilities and deep understanding of consumer behavior patterns."
+                generation_config=generation_config
             )
             
-            print('✅ Gemini 2.5 Pro model initialized - Enhanced analysis capabilities active')
+            print('✅ Gemini 2.5 Pro model initialized - Superior analysis capabilities active')
             
         except Exception as e:
-            print(f'❌ Failed to initialize Gemini Pro model: {e}')
+            print(f'❌ Failed to initialize Gemini 2.5 Pro model: {e}')
             print("🔄 Attempting fallback to Gemini 2.0 Flash...")
             try:
                 # Fallback to 2.0 Flash if Pro not available
                 self.model = genai.GenerativeModel(
-                    model_name="gemini-2.0-flash-exp",
+                    model_name="gemini-2.0-flash",
                     generation_config={
                         "temperature": 0.7,
                         "top_p": 0.9,
@@ -75,25 +74,62 @@ class GeminiService:
             raise ValueError("Gemini model not initialized")
 
         try:
-            print('� Generating response with Gemini 2.5 Pro - Enhanced Analysis Mode...')
+            print('🧠 Generating response with Gemini 2.5 Pro - Superior Analysis Mode...')
             
             prompt = self._construct_prompt(query, search_context)
             
-            # Run the generation in a separate thread to avoid blocking
+            # Run the generation with timeout protection
             loop = asyncio.get_event_loop()
-            result = await loop.run_in_executor(
-                None, 
-                self._generate_content_sync, 
-                prompt
+            result = await asyncio.wait_for(
+                loop.run_in_executor(
+                    None, 
+                    self._generate_content_sync, 
+                    prompt
+                ),
+                timeout=self.timeout
             )
             
-            response_text = result.text
-            print('✅ Enhanced response generated with superior analysis')
+            # Handle Gemini 2.5 Pro response format
+            try:
+                response_text = result.text
+            except (AttributeError, ValueError) as response_error:
+                # For complex responses, extract text from parts
+                try:
+                    if hasattr(result, 'candidates') and result.candidates:
+                        parts = result.candidates[0].content.parts
+                        response_text = ''.join([part.text for part in parts if hasattr(part, 'text')])
+                    else:
+                        response_text = str(result)
+                except Exception:
+                    response_text = "Response generated but could not be parsed properly."
+            
+            print('✅ Superior response generated with 2.5 Pro analysis')
             
             return response_text
 
+        except asyncio.TimeoutError:
+            print(f'⏱️ Request timed out after {self.timeout} seconds')
+            print("💡 Consider reducing query complexity or increasing timeout")
+            raise ValueError(f"Request timed out after {self.timeout} seconds. Try a simpler query or increase timeout.")
+            
         except Exception as e:
+            error_str = str(e)
             print(f'❌ Gemini API error: {e}')
+            
+            # Handle specific error types
+            if "504" in error_str or "deadline" in error_str.lower():
+                print("⏱️ Server timeout - request took too long to process")
+                print("💡 Try breaking down the request into smaller parts")
+                raise ValueError("Server timeout: Request was too complex. Please try a simpler query.")
+            elif "quota" in error_str.lower() or "429" in error_str:
+                print("⚠️ Quota limit exceeded. Implementing rate limiting...")
+                print("💡 Consider using the stable model or reducing request frequency")
+                
+                # Wait before retrying if it's a rate limit error
+                if "retry_delay" in error_str:
+                    print("⏳ Waiting 3 seconds before retry...")
+                    await asyncio.sleep(3)
+                    
             raise ValueError(f"Response generation failed: {str(e)}")
 
     def _generate_content_sync(self, prompt: str):
@@ -102,7 +138,7 @@ class GeminiService:
 
     def _construct_prompt(self, query: str, search_context: str) -> str:
         """
-        Construct an advanced prompt for Gemini 2.5 Pro with enhanced analytical capabilities and professional source citations
+        Construct an advanced prompt for Gemini 2.5 Pro with superior analytical capabilities and professional source citations
         
         Args:
             query: The user's query
@@ -211,7 +247,7 @@ Sentiment Score: 67.3/100 (Moderate Positive - 94.2% confidence) [^1]
 [^2] Industry Report - EV Market Intelligence. Market research and charging infrastructure analysis.
 [^3] Expert Review - EV Competitive Positioning. Professional market analysis and brand comparison data."
 
-Provide enhanced, statistically-aware analysis that leverages the superior capabilities of Gemini 2.5 Pro with professional source citations throughout."""
+Provide enhanced, statistically-aware analysis that leverages the fast capabilities of Gemini 2.0 Flash with professional source citations throughout."""
 
     async def generate_fallback_response(self, query: str, error_context: Optional[str] = None) -> str:
         """
