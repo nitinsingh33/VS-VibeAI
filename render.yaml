@@ -1,67 +1,42 @@
-# VibeAI Render Configuration - Optimized for Free Tier
-
 services:
-  # Main Backend Service (Free Tier)
+  # Main VibeAI Backend API
   - type: web
     name: vibeai-backend
-    runtime: python3
-    plan: free
-    region: oregon
-    buildCommand: |
-      pip install --upgrade pip
-      pip install -r requirements.txt
-    startCommand: python -m uvicorn main:app --host 0.0.0.0 --port $PORT --workers 1
-    healthCheckPath: /api/health
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
-      - key: SERPER_API_KEY
-        sync: false
       - key: GEMINI_API_KEY
         sync: false
-      - key: YOUTUBE_API_KEY
-        sync: false
       - key: RESPONSE_TIMEOUT
-        value: "120"
-      - key: MAX_SEARCH_RESULTS
-        value: "5"
-      - key: SEARCH_TIMEOUT
-        value: "10"
-      - key: PYTHONPATH
-        value: "/opt/render/project/src"
+        value: "30"
       - key: PYTHON_VERSION
-        value: "3.11.0"
-
-  # Analytics Dashboard (Free Tier)
+        value: "3.11"
+    healthCheckPath: /api/health
+    autoDeploy: true
+    
+  # Streamlit Analytics Dashboard
   - type: web
     name: vibeai-analytics
-    runtime: python3
-    plan: free
-    region: oregon
-    buildCommand: |
-      pip install --upgrade pip
-      pip install -r requirements.txt
-      pip install streamlit
-    startCommand: streamlit run analytics_dashboard.py --server.port $PORT --server.address 0.0.0.0 --server.enableXsrfProtection false --server.enableCORS false
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run analytics_dashboard.py --server.port=$PORT --server.address=0.0.0.0 --server.headless=true
     envVars:
-      - key: BACKEND_URL
-        fromService:
-          type: web
-          name: vibeai-backend
-          property: host
-
-  # Premium Dashboard (Free Tier)  
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: STREAMLIT_SERVER_HEADLESS
+        value: "true"
+    autoDeploy: true
+    
+  # Premium Analytics Dashboard
   - type: web
     name: vibeai-premium
-    runtime: python3
-    plan: free
-    region: oregon
-    buildCommand: |
-      pip install --upgrade pip
-      pip install -r requirements.txt
-      pip install streamlit
-    startCommand: streamlit run streamlit_app_premium.py --server.port $PORT --server.address 0.0.0.0 --server.enableXsrfProtection false --server.enableCORS false
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run premium_analytics.py --server.port=$PORT --server.address=0.0.0.0 --server.headless=true
     envVars:
-      - key: BACKEND_URL
-        fromService:
-          type: web
-          name: vibeai-backend
-          property: host
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: STREAMLIT_SERVER_HEADLESS
+        value: "true"
+    autoDeploy: true

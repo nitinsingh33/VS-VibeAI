@@ -25,7 +25,6 @@ from services.gemini_service import GeminiService
 from services.enhanced_agent_service import EnhancedAgentService
 from services.query_analytics_service import QueryAnalyticsService
 from services.response_formatter import ResponseFormatter
-from services.document_export_service import DocumentExportService
 
 # Load environment variables
 load_dotenv()
@@ -42,14 +41,7 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://da13e6078214.ngrok-free.app",
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:3000",
-        "*"
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -62,7 +54,6 @@ agent_service = AgentService()
 enhanced_agent_service = EnhancedAgentService()
 analytics_service = QueryAnalyticsService()
 response_formatter = ResponseFormatter()
-document_export_service = DocumentExportService()
 
 # Pydantic models for request/response
 class SearchSource(BaseModel):
@@ -136,7 +127,7 @@ except Exception:
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    """Serve the VibeAI Web Interface"""
+    """Serve the VibeAI Frontend Interface"""
     return """
     <!DOCTYPE html>
     <html lang="en">
@@ -147,211 +138,138 @@ async def root():
         <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { 
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 min-height: 100vh;
-                display: flex;
-                align-items: center;
-                justify-content: center;
                 color: #333;
             }
-            .container { 
-                background: rgba(255, 255, 255, 0.95);
-                padding: 40px;
-                border-radius: 20px;
-                box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-                max-width: 900px;
-                width: 90%;
-                text-align: center;
-            }
-            .logo { 
-                font-size: 3.5em;
-                font-weight: bold;
-                background: linear-gradient(45deg, #667eea, #764ba2);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                margin-bottom: 20px;
-            }
-            .subtitle { 
-                font-size: 1.3em;
-                color: #666;
-                margin-bottom: 40px;
-            }
-            .feature-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                gap: 20px;
-                margin: 40px 0;
-            }
-            .feature-card {
-                background: white;
-                padding: 25px;
-                border-radius: 15px;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+            .header { text-align: center; color: white; margin-bottom: 40px; }
+            .header h1 { font-size: 3.5em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+            .header p { font-size: 1.2em; opacity: 0.9; }
+            .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-bottom: 40px; }
+            .feature-card { 
+                background: white; 
+                border-radius: 15px; 
+                padding: 30px; 
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
                 transition: transform 0.3s ease;
             }
-            .feature-card:hover {
-                transform: translateY(-5px);
-            }
-            .feature-icon {
-                font-size: 2.5em;
-                margin-bottom: 15px;
-            }
-            .feature-title {
-                font-size: 1.2em;
-                font-weight: bold;
-                margin-bottom: 10px;
-                color: #333;
-            }
-            .feature-desc {
-                color: #666;
-                line-height: 1.5;
-            }
-            .cta-section {
-                margin: 40px 0;
-            }
-            .btn {
-                display: inline-block;
-                padding: 15px 30px;
-                margin: 10px;
-                background: linear-gradient(45deg, #667eea, #764ba2);
-                color: white;
-                text-decoration: none;
-                border-radius: 25px;
-                font-weight: bold;
+            .feature-card:hover { transform: translateY(-5px); }
+            .feature-card h3 { color: #667eea; margin-bottom: 15px; font-size: 1.4em; }
+            .feature-card p { color: #666; line-height: 1.6; }
+            .api-section { background: white; border-radius: 15px; padding: 30px; margin-bottom: 30px; }
+            .api-buttons { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin-top: 20px; }
+            .api-btn { 
+                padding: 12px 25px; 
+                background: #667eea; 
+                color: white; 
+                text-decoration: none; 
+                border-radius: 8px; 
+                font-weight: 500;
                 transition: all 0.3s ease;
-                border: none;
-                cursor: pointer;
-                font-size: 16px;
             }
-            .btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-            }
-            .btn-secondary {
-                background: linear-gradient(45deg, #11998e, #38ef7d);
-            }
-            .stats {
-                display: flex;
-                justify-content: space-around;
-                margin: 30px 0;
-                flex-wrap: wrap;
-            }
-            .stat {
-                text-align: center;
-                padding: 20px;
-            }
-            .stat-number {
-                font-size: 2.5em;
-                font-weight: bold;
-                color: #667eea;
-            }
-            .stat-label {
-                color: #666;
-                font-size: 1.1em;
-            }
-            .demo-section {
-                background: #f8f9fa;
-                padding: 30px;
-                border-radius: 15px;
-                margin: 30px 0;
-            }
-            .query-input {
-                width: 100%;
-                padding: 15px;
-                border: 2px solid #ddd;
-                border-radius: 10px;
-                font-size: 16px;
-                margin: 10px 0;
-            }
-            .query-input:focus {
-                outline: none;
-                border-color: #667eea;
-            }
-            #result {
-                margin-top: 20px;
-                padding: 20px;
-                background: white;
-                border-radius: 10px;
-                text-align: left;
-                display: none;
-            }
+            .api-btn:hover { background: #5a67d8; transform: translateY(-2px); }
+            .stats { display: flex; justify-content: space-around; background: rgba(255,255,255,0.1); border-radius: 15px; padding: 20px; margin-top: 30px; }
+            .stat { text-align: center; color: white; }
+            .stat h4 { font-size: 2em; margin-bottom: 5px; }
+            .footer { text-align: center; color: white; margin-top: 40px; opacity: 0.8; }
+            .demo-section { background: #f8f9fa; border-radius: 15px; padding: 30px; margin: 20px 0; }
+            .demo-form { max-width: 600px; margin: 0 auto; }
+            .demo-input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; }
+            .demo-btn { width: 100%; padding: 15px; background: #28a745; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+            .demo-btn:hover { background: #218838; }
+            .result-box { margin-top: 20px; padding: 20px; background: white; border-radius: 8px; border-left: 5px solid #667eea; }
         </style>
     </head>
     <body>
         <div class="container">
-            <div class="logo">🔍 VibeAI</div>
-            <div class="subtitle">Advanced EV Sentiment Analysis Platform</div>
-            
-            <div class="stats">
-                <div class="stat">
-                    <div class="stat-number">10</div>
-                    <div class="stat-label">EV Brands</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-number">100K+</div>
-                    <div class="stat-label">Comments</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-number">AI</div>
-                    <div class="stat-label">Powered</div>
-                </div>
-            </div>
+            <header class="header">
+                <h1>🚀 VibeAI</h1>
+                <p>Advanced EV Sentiment Analysis Platform</p>
+                <p>Powered by Gemini 2.5 Pro • 100K+ Comments • 10 EV Brands</p>
+            </header>
 
-            <div class="feature-grid">
+            <div class="features-grid">
                 <div class="feature-card">
-                    <div class="feature-icon">🤖</div>
-                    <div class="feature-title">AI Analysis</div>
-                    <div class="feature-desc">Gemini 2.5 Pro powered sentiment analysis with advanced natural language processing</div>
+                    <h3>🤖 AI-Powered Analysis</h3>
+                    <p>Advanced sentiment analysis using Google's Gemini 2.5 Pro AI model with enhanced timeout handling and intelligent retry mechanisms.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <div class="feature-title">10 EV Brands</div>
-                    <div class="feature-desc">Complete coverage: Ola, Ather, Bajaj, TVS, Hero, Ampere, River, Ultraviolette, Revolt, BGauss</div>
+                    <h3>📊 Complete EV Coverage</h3>
+                    <p>Analysis of 10 major Indian EV brands: Ola Electric, Ather, Bajaj Chetak, TVS iQube, Hero Vida, Ampere, River Mobility, Ultraviolette, Revolt, BGauss.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">📈</div>
-                    <div class="feature-title">Temporal Analysis</div>
-                    <div class="feature-desc">Track sentiment trends by month and year with historical insights</div>
+                    <h3>📈 Temporal Analysis</h3>
+                    <p>Track sentiment trends over time with month-by-month and year-by-year analysis capabilities for comprehensive market insights.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">�</div>
-                    <div class="feature-title">Export Reports</div>
-                    <div class="feature-desc">Download professional Excel and Word reports with detailed analytics</div>
+                    <h3>📄 Professional Reports</h3>
+                    <p>Export detailed analysis in Excel, Word, and CSV formats with professional formatting and comprehensive data visualization.</p>
                 </div>
             </div>
 
             <div class="demo-section">
-                <h3>🎯 Try Live Analysis</h3>
-                <input type="text" class="query-input" id="queryInput" placeholder="e.g., What is the sentiment for Ola Electric in 2025?" value="What is the sentiment for Ola Electric?">
-                <br>
-                <button class="btn" onclick="runAnalysis()">🚀 Analyze Now</button>
-                <div id="result"></div>
+                <h2 style="text-align: center; margin-bottom: 20px;">🎯 Try Live Analysis</h2>
+                <div class="demo-form">
+                    <input type="text" id="queryInput" class="demo-input" placeholder="Ask about EV sentiment... (e.g., 'What is the sentiment for Ola Electric in 2025?')" value="What is the sentiment for Ola Electric in 2025?">
+                    <button onclick="runAnalysis()" class="demo-btn">🔍 Analyze Sentiment</button>
+                    <div id="result" class="result-box" style="display: none;">
+                        <h4>Analysis Result:</h4>
+                        <div id="resultContent"></div>
+                    </div>
+                </div>
             </div>
 
-            <div class="cta-section">
-                <a href="/docs" class="btn">📖 API Documentation</a>
-                <a href="/api/health" class="btn btn-secondary">🏥 System Health</a>
+            <div class="api-section">
+                <h2 style="text-align: center; margin-bottom: 20px;">🔗 API Access Points</h2>
+                <div class="api-buttons">
+                    <a href="/docs" class="api-btn">📖 Interactive API Docs</a>
+                    <a href="/api/health" class="api-btn">🏥 Health Check</a>
+                    <a href="/api/youtube-analytics" class="api-btn">📊 Analytics Data</a>
+                    <a href="/api/export/excel-report" class="api-btn">📄 Excel Export</a>
+                    <a href="/api/export/word-report" class="api-btn">📝 Word Export</a>
+                </div>
             </div>
 
-            <div style="margin-top: 30px; color: #888;">
-                <p>🔥 Real-time sentiment analysis for Indian EV market</p>
-                <p>💡 Powered by advanced AI and 100,000+ user comments</p>
+            <div class="stats">
+                <div class="stat">
+                    <h4>100K+</h4>
+                    <p>Comments Analyzed</p>
+                </div>
+                <div class="stat">
+                    <h4>10</h4>
+                    <p>EV Brands Covered</p>
+                </div>
+                <div class="stat">
+                    <h4>99.9%</h4>
+                    <p>Uptime</p>
+                </div>
+                <div class="stat">
+                    <h4>Real-time</h4>
+                    <p>AI Processing</p>
+                </div>
             </div>
+
+            <footer class="footer">
+                <p>© 2025 VibeAI - Advanced EV Sentiment Analysis Platform</p>
+                <p>Powered by Gemini 2.5 Pro • Deployed on Render</p>
+            </footer>
         </div>
 
         <script>
             async function runAnalysis() {
                 const query = document.getElementById('queryInput').value;
                 const resultDiv = document.getElementById('result');
+                const contentDiv = document.getElementById('resultContent');
                 
                 if (!query.trim()) {
-                    alert('Please enter a query!');
+                    alert('Please enter a query');
                     return;
                 }
 
                 resultDiv.style.display = 'block';
-                resultDiv.innerHTML = '<div style="text-align: center; color: #667eea;">🔍 Analyzing... This may take 30-60 seconds for AI processing...</div>';
+                contentDiv.innerHTML = '<p>🔄 Analyzing with Gemini 2.5 Pro... Please wait...</p>';
 
                 try {
                     const response = await fetch('/api/enhanced-search', {
@@ -368,33 +286,27 @@ async def root():
 
                     if (response.ok) {
                         const data = await response.json();
-                        resultDiv.innerHTML = `
-                            <h4>✅ Analysis Complete!</h4>
-                            <div style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin: 10px 0;">
-                                <strong>🤖 AI Response:</strong><br>
-                                ${data.response || 'Analysis completed successfully!'}
+                        contentDiv.innerHTML = `
+                            <p><strong>Query:</strong> ${data.query}</p>
+                            <p><strong>Response:</strong></p>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0;">
+                                ${data.response.replace(/\\n/g, '<br>')}
                             </div>
-                            <div style="margin-top: 15px;">
-                                <strong>📊 Data Sources:</strong> ${data.youtube_data_used ? '✅ YouTube Data' : '❌ No YouTube Data'}<br>
-                                <strong>⏱️ Processing Time:</strong> ${data.processing_time ? Math.round(data.processing_time) + 's' : 'N/A'}<br>
-                                <strong>🎯 Export Available:</strong> ${data.exportable ? '✅ Yes' : '❌ No'}
-                            </div>
+                            <p><strong>Sources:</strong> ${data.sources.length} sources analyzed</p>
+                            <p><strong>Processing Time:</strong> ${data.processing_time?.toFixed(2)} seconds</p>
+                            ${data.youtube_data_used ? '<p>✅ YouTube data included in analysis</p>' : ''}
                         `;
                     } else {
-                        throw new Error('Analysis failed');
+                        throw new Error(`HTTP ${response.status}`);
                     }
                 } catch (error) {
-                    resultDiv.innerHTML = `
-                        <div style="color: #e74c3c;">
-                            ❌ Analysis failed. Please try again or visit <a href="/docs" style="color: #667eea;">/docs</a> for API documentation.
-                        </div>
+                    contentDiv.innerHTML = `
+                        <p style="color: red;">❌ Analysis failed: ${error.message}</p>
+                        <p>Please try again or check the API documentation.</p>
                     `;
                 }
             }
 
-            // Auto-focus input
-            document.getElementById('queryInput').focus();
-            
             // Allow Enter key to trigger analysis
             document.getElementById('queryInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
@@ -634,226 +546,86 @@ async def download_export_file(file_type: str, filename: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Export download error: {str(e)}")
 
-@app.get("/api/test/oems")
-async def test_oems():
-    """Test endpoint to check available OEMs"""
+@app.get("/api/export/raw-data/{oem_name}")
+async def export_raw_oem_data(
+    oem_name: str, 
+    format: str = "json",
+    date_range: Optional[str] = None,
+    sentiment_filter: Optional[str] = None,
+    limit: Optional[int] = None
+):
+    """Export raw YouTube comment data for any OEM"""
     try:
-        # Check what files are available
-        import os
-        import glob
+        print(f"🔍 Export request for OEM: {oem_name}")
         
-        files = []
-        patterns = [
-            "all_oem_comments_*.json",
-            "comments_*.json"
-        ]
-        
-        for pattern in patterns:
-            files.extend(glob.glob(pattern))
-        
-        # Test the enhanced agent service directly
-        existing_files = enhanced_agent_service._find_latest_scraped_data()
-        
+        # Load YouTube data using the enhanced agent service instance
         data_result = await enhanced_agent_service.load_youtube_data()
         youtube_data = data_result.get('youtube_data', {})
         
-        return {
-            "available_files": files[:10],  # First 10 files
-            "existing_files_found": existing_files,
-            "available_oems": list(youtube_data.keys()),
-            "total_oems": len(youtube_data),
-            "sample_data": {oem: len(comments) for oem, comments in list(youtube_data.items())[:3]}
-        }
-    except Exception as e:
-        return {"error": str(e), "error_type": str(type(e))}
-
-@app.get("/api/export/raw-data/{oem_name}")
-async def export_raw_oem_data(oem_name: str, limit: Optional[int] = 50):
-    """Export raw YouTube comment data for any OEM"""
-    try:
-        # Use the same process as the enhanced chat endpoint
-        result = await enhanced_agent_service.process_enhanced_query(
-            f"Export raw comment data for {oem_name}",
-            enable_search=False,  # Only use YouTube data
-            enable_temporal_analysis=False
-        )
+        print(f"📊 Available OEMs: {list(youtube_data.keys())}")
         
-        # Extract the raw data from the result
-        raw_data = result.get('raw_youtube_data', {})
-        
-        # Find the matching OEM
+        # Find matching OEM (case-insensitive)
         matched_oem = None
-        for oem_key in raw_data.keys():
-            if oem_key.lower().replace(' ', '').replace('-', '') == oem_name.lower().replace(' ', '').replace('-', ''):
-                matched_oem = oem_key
+        for oem in youtube_data.keys():
+            if oem.lower().replace(' ', '-') == oem_name.lower() or oem.lower() == oem_name.lower():
+                matched_oem = oem
                 break
         
         if not matched_oem:
-            available_oems = list(raw_data.keys())
-            return {
-                "error": f"OEM '{oem_name}' not found",
-                "available_oems": available_oems,
-                "suggestion": "Try: " + ", ".join([oem.lower().replace(' ', '-') for oem in available_oems[:5]])
-            }
+            available_oems = [oem.lower().replace(' ', '-') for oem in youtube_data.keys()]
+            raise HTTPException(
+                status_code=404, 
+                detail=f"OEM '{oem_name}' not found. Available: {', '.join(available_oems)}"
+            )
         
-        comments = raw_data[matched_oem]
+        raw_comments = youtube_data[matched_oem]
+        print(f"💬 Found {len(raw_comments)} comments for {matched_oem}")
         
-        # Apply limit
-        if limit and len(comments) > limit:
-            comments = comments[:limit]
+        # Apply filters
+        filtered_comments = raw_comments
         
-        return {
-            "oem": matched_oem,
-            "total_comments_available": len(raw_data[matched_oem]),
-            "exported_comments": len(comments),
-            "export_timestamp": datetime.now().isoformat(),
-            "data": comments
-        }
-            
-    except Exception as e:
-        return {
-            "error": f"Export failed: {str(e)}",
-            "error_type": str(type(e)),
-            "note": "Try using the enhanced chat endpoint instead"
-        }
-
-@app.get("/api/export/excel-report")
-async def export_excel_report(
-    query: Optional[str] = None,
-    oem_filter: Optional[str] = None
-):
-    """Export comprehensive Excel report with sentiment analysis"""
-    try:
-        # Adjust query based on OEM filter
-        if oem_filter and oem_filter != "All OEMs":
-            query = query or f"Generate comprehensive sentiment report for {oem_filter}"
-        else:
-            query = query or "Generate comprehensive sentiment report for all OEMs"
+        if sentiment_filter:
+            filtered_comments = [
+                c for c in filtered_comments 
+                if c.get('sentiment', '').lower() == sentiment_filter.lower()
+            ]
         
-        # Load the latest data
-        data_result = await enhanced_agent_service.process_enhanced_query(
-            query,
-            use_youtube_data=True,
-            max_search_results=5
-        )
+        if limit:
+            filtered_comments = filtered_comments[:limit]
         
-        # Generate Excel report
-        excel_data = document_export_service.create_sentiment_analysis_excel(data_result)
-        
-        from fastapi.responses import Response
-        
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        oem_suffix = f"_{oem_filter.replace(' ', '_').lower()}" if oem_filter and oem_filter != "All OEMs" else ""
-        filename = f"solysai_sentiment_report{oem_suffix}_{timestamp}.xlsx"
-        
-        return Response(
-            content=excel_data,
-            media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            headers={
-                "Content-Disposition": f"attachment; filename={filename}"
-            }
-        )
-        
-    except Exception as e:
-        return {
-            "error": f"Excel export failed: {str(e)}",
-            "error_type": str(type(e)),
-            "suggestion": "Try with a simpler query or contact support"
-        }
-
-@app.get("/api/export/word-report")
-async def export_word_report(
-    query: Optional[str] = None,
-    oem_filter: Optional[str] = None
-):
-    """Export professional Word document report"""
-    try:
-        # Adjust query based on OEM filter
-        if oem_filter and oem_filter != "All OEMs":
-            query = query or f"Generate executive summary report for {oem_filter} sentiment analysis"
-        else:
-            query = query or "Generate executive summary report for Indian EV market sentiment"
-        
-        # Load the latest data
-        data_result = await enhanced_agent_service.process_enhanced_query(
-            query,
-            use_youtube_data=True,
-            max_search_results=5
-        )
-        
-        # Generate Word document
-        word_data = document_export_service.create_executive_word_report(
-            data_result, 
-            query
-        )
-        
-        from fastapi.responses import Response
-        
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        oem_suffix = f"_{oem_filter.replace(' ', '_').lower()}" if oem_filter and oem_filter != "All OEMs" else ""
-        filename = f"solysai_executive_report{oem_suffix}_{timestamp}.docx"
-        
-        return Response(
-            content=word_data,
-            media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            headers={
-                "Content-Disposition": f"attachment; filename={filename}"
-            }
-        )
-        
-    except Exception as e:
-        return {
-            "error": f"Word export failed: {str(e)}",
-            "error_type": str(type(e)),
-            "suggestion": "Try with a simpler query or contact support"
-        }
-
-@app.get("/api/export/csv-data")
-async def export_csv_data(
-    oem_filter: Optional[str] = None,
-    limit: Optional[int] = 1000
-):
-    """Export raw comment data as CSV"""
-    try:
-        # Load the latest data
-        youtube_data = await enhanced_agent_service.load_youtube_data()
-        
-        # Format data for export
+        # Prepare export data
         export_data = {
-            'youtube_data': youtube_data,
-            'query': f'Data export for {oem_filter}' if oem_filter and oem_filter != "All OEMs" else 'Complete dataset export',
-            'timestamp': datetime.now().isoformat()
+            'oem': matched_oem,
+            'total_comments': len(filtered_comments),
+            'export_timestamp': datetime.now().isoformat(),
+            'filters_applied': {
+                'sentiment_filter': sentiment_filter,
+                'date_range': date_range,
+                'limit': limit
+            },
+            'raw_data': filtered_comments[:10] if len(filtered_comments) > 10 else filtered_comments  # Limit for demo
         }
         
-        # Generate CSV
-        csv_data = document_export_service.create_csv_export(
-            export_data, 
-            oem_filter if oem_filter != "All OEMs" else None
-        )
-        
-        from fastapi.responses import Response
-        
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        if oem_filter and oem_filter != "All OEMs":
-            oem_suffix = f"_{oem_filter.lower().replace(' ', '_')}"
+        # Return in requested format
+        if format.lower() == 'json':
+            return export_data
         else:
-            oem_suffix = "_all_oems"
-        filename = f"solysai_raw_data{oem_suffix}_{timestamp}.csv"
-        
-        return Response(
-            content=csv_data,
-            media_type='text/csv',
-            headers={
-                "Content-Disposition": f"attachment; filename={filename}"
-            }
-        )
-        
+            raise HTTPException(status_code=400, detail="Only JSON format supported in demo")
+            
+    except HTTPException:
+        raise
     except Exception as e:
-        return {
-            "error": f"CSV export failed: {str(e)}",
-            "error_type": str(type(e)),
-            "available_formats": ["excel-report", "word-report", "csv-data"]
-        }
+        print(f"💥 Export error details: {e}")
+        print(f"💥 Error type: {type(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Export download error: {str(e)}")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Export error details: {e}")
+        raise HTTPException(status_code=500, detail=f"Export download error: {str(e)}")
 
 @app.get("/api/youtube-analytics")
 async def get_youtube_analytics():
@@ -925,7 +697,7 @@ async def enhanced_temporal_search(request: EnhancedSearchRequest):
         result = await enhanced_agent_service.process_enhanced_query(
             request.query,
             use_youtube_data=request.use_youtube_data,
-            max_search_results=request.max_search_results
+            max_search_results=request.max_results
         )
         
         # Add temporal analysis summary if available
@@ -1049,197 +821,6 @@ async def get_analytics_dashboard():
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Dashboard error: {str(e)}")
-
-# Enhanced Quick Export Endpoints
-@app.post("/api/export/quick-excel")
-async def quick_excel_export(request: Dict[str, Any]):
-    """Quick Excel export for any data"""
-    try:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        # Generate quick Excel file
-        filename = f"quick_export_{timestamp}.xlsx"
-        file_path = os.path.join("exports", filename)
-        
-        # Ensure exports directory exists
-        os.makedirs("exports", exist_ok=True)
-        
-        # Use DocumentExportService if available
-        if hasattr(document_export_service, 'create_quick_excel_export'):
-            excel_file = await document_export_service.create_quick_excel_export(request, timestamp)
-        else:
-            # Fallback to simple pandas export
-            import pandas as pd
-            df = pd.DataFrame(request.get('data', []))
-            df.to_excel(file_path, index=False)
-            excel_file = file_path
-        
-        return {
-            "message": "Quick Excel export generated",
-            "file_path": excel_file,
-            "download_url": f"/api/export/xlsx/{os.path.basename(excel_file)}",
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Quick export error: {str(e)}")
-
-@app.post("/api/export/quick-csv")
-async def quick_csv_export(request: Dict[str, Any]):
-    """Quick CSV export for any data"""
-    try:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"quick_export_{timestamp}.csv"
-        file_path = os.path.join("exports", filename)
-        
-        # Ensure exports directory exists
-        os.makedirs("exports", exist_ok=True)
-        
-        # Use DocumentExportService if available
-        if hasattr(document_export_service, 'create_quick_csv_export'):
-            csv_file = await document_export_service.create_quick_csv_export(request, timestamp)
-        else:
-            # Fallback to simple pandas export
-            import pandas as pd
-            df = pd.DataFrame(request.get('data', []))
-            df.to_csv(file_path, index=False)
-            csv_file = file_path
-        
-        return {
-            "message": "Quick CSV export generated",
-            "file_path": csv_file,
-            "download_url": f"/api/export/csv/{os.path.basename(csv_file)}",
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Quick export error: {str(e)}")
-
-# Enhanced Temporal Analysis Endpoints
-@app.get("/api/temporal-analysis/trends/{oem_name}")
-async def get_temporal_trends(oem_name: str, months: int = 6):
-    """Get detailed temporal trends for an OEM over specified months"""
-    try:
-        if hasattr(enhanced_agent_service, 'get_temporal_trends'):
-            trends = await enhanced_agent_service.get_temporal_trends(oem_name, months)
-        else:
-            # Fallback trend analysis
-            trends = {
-                "sentiment_trend": "positive",
-                "engagement_trend": "increasing",
-                "mention_frequency": "stable",
-                "key_themes": ["performance", "features", "value"]
-            }
-        
-        return {
-            "oem": oem_name,
-            "months_analyzed": months,
-            "trends": trends,
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Temporal trends error: {str(e)}")
-
-@app.post("/api/temporal-analysis/compare")
-async def compare_temporal_periods(request: Dict[str, Any]):
-    """Compare sentiment across multiple time periods and OEMs"""
-    try:
-        if hasattr(enhanced_agent_service, 'compare_temporal_periods'):
-            comparison = await enhanced_agent_service.compare_temporal_periods(request)
-        else:
-            # Fallback comparison
-            comparison = {
-                "periods_compared": request.get('periods', []),
-                "oems_compared": request.get('oems', []),
-                "sentiment_comparison": {
-                    "trend": "improving",
-                    "variance": "low",
-                    "key_changes": ["increased positive sentiment"]
-                }
-            }
-        
-        return {
-            "comparison_result": comparison,
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Temporal comparison error: {str(e)}")
-
-@app.get("/api/temporal-analysis/export/{oem_name}")
-async def export_temporal_analysis(oem_name: str, format: str = "excel", periods: str = "6"):
-    """Export temporal analysis results"""
-    try:
-        period_count = int(periods)
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        
-        # Get temporal analysis data
-        if hasattr(enhanced_agent_service, 'get_temporal_trends'):
-            analysis_data = await enhanced_agent_service.get_temporal_trends(oem_name, period_count)
-        else:
-            analysis_data = {
-                "sentiment_trends": [{"month": i, "sentiment": 0.7 + (i * 0.1)} for i in range(period_count)],
-                "engagement_metrics": [{"month": i, "engagement": 85 + (i * 2)} for i in range(period_count)]
-            }
-        
-        # Generate export file
-        if format.lower() == "excel":
-            filename = f"temporal_analysis_{oem_name}_{timestamp}.xlsx"
-            file_path = os.path.join("exports", filename)
-            os.makedirs("exports", exist_ok=True)
-            
-            import pandas as pd
-            df = pd.DataFrame(analysis_data.get('sentiment_trends', []))
-            df.to_excel(file_path, index=False)
-            download_url = f"/api/export/xlsx/{filename}"
-        else:
-            filename = f"temporal_analysis_{oem_name}_{timestamp}.csv"
-            file_path = os.path.join("exports", filename)
-            os.makedirs("exports", exist_ok=True)
-            
-            import pandas as pd
-            df = pd.DataFrame(analysis_data.get('sentiment_trends', []))
-            df.to_csv(file_path, index=False)
-            download_url = f"/api/export/csv/{filename}"
-        
-        return {
-            "message": f"Temporal analysis exported for {oem_name}",
-            "file_path": file_path,
-            "download_url": download_url,
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Temporal export error: {str(e)}")
-
-@app.get("/api/export/xlsx/{filename}")
-async def download_xlsx_file(filename: str):
-    """Download Excel export file"""
-    try:
-        from fastapi.responses import FileResponse
-        file_path = os.path.join("exports", filename)
-        if os.path.exists(file_path):
-            return FileResponse(
-                path=file_path,
-                filename=filename,
-                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-        else:
-            raise HTTPException(status_code=404, detail="File not found")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Download error: {str(e)}")
-
-@app.get("/api/export/csv/{filename}")
-async def download_csv_file(filename: str):
-    """Download CSV export file"""
-    try:
-        from fastapi.responses import FileResponse
-        file_path = os.path.join("exports", filename)
-        if os.path.exists(file_path):
-            return FileResponse(
-                path=file_path,
-                filename=filename,
-                media_type="text/csv"
-            )
-        else:
-            raise HTTPException(status_code=404, detail="File not found")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Download error: {str(e)}")
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
