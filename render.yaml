@@ -1,31 +1,84 @@
-# Render.com deployment configuration
+# VibeAI Render Configuration - Multi-Service Deployment
+
 services:
+  # Backend API Service
   - type: web
-    name: solysai-sentiment-app
-    env: python
-    region: oregon
+    name: vibeai-backend
+    runtime: python3
     plan: starter
+    region: oregon
     buildCommand: pip install -r requirements.txt
-    startCommand: python main.py
+    startCommand: python -m uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
     envVars:
+      - key: SERPER_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: YOUTUBE_API_KEY
+        sync: false
+      - key: RESPONSE_TIMEOUT
+        value: 120
+      - key: PYTHONPATH
+        value: /opt/render/project/src
       - key: PORT
         value: 8000
-      - key: SERPER_API_KEY
-        sync: false  # Will be set manually in Render dashboard
-      - key: GEMINI_API_KEY
-        sync: false  # Will be set manually in Render dashboard
-      - key: MAX_SEARCH_RESULTS
-        value: 5
-      - key: SEARCH_TIMEOUT
-        value: 10000
-      - key: RESPONSE_TIMEOUT
-        value: 30000
-      - key: PYTHONPATH
-        value: .
-      - key: PYTHON_VERSION
-        value: 3.11
-    healthCheckPath: /api/health
-    autoDeploy: true
-    rootDir: .
-    domains:
-      - solysai-sentiment-analysis.onrender.com
+
+  # Analytics Dashboard Service
+  - type: web
+    name: vibeai-analytics
+    runtime: python3
+    plan: starter
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run analytics_dashboard.py --server.port $PORT --server.address 0.0.0.0 --server.enableXsrfProtection false
+    healthCheckPath: /_stcore/health
+    envVars:
+      - key: BACKEND_URL
+        fromService:
+          type: web
+          name: vibeai-backend
+          property: host
+
+  # Premium Dashboard Service
+  - type: web
+    name: vibeai-premium
+    runtime: python3
+    plan: starter
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run streamlit_app_premium.py --server.port $PORT --server.address 0.0.0.0 --server.enableXsrfProtection false
+    healthCheckPath: /_stcore/health
+    envVars:
+      - key: BACKEND_URL
+        fromService:
+          type: web
+          name: vibeai-backend
+          property: host
+
+  # Frontend Service
+  - type: web
+    name: vibeai-frontend
+    runtime: node
+    plan: starter
+    region: oregon
+    rootDir: ./web
+    buildCommand: npm install && npm run build
+    startCommand: npm run dev -- --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: vibeai-backend
+          property: host
+      - key: VITE_ANALYTICS_URL
+        fromService:
+          type: web
+          name: vibeai-analytics
+          property: host
+      - key: VITE_PREMIUM_URL
+        fromService:
+          type: web
+          name: vibeai-premium
+          property: host
