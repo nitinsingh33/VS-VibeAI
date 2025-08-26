@@ -1,10 +1,10 @@
 services:
-  # Main VibeAI Backend API + Embedded Frontend  
+  # VibeAI Complete Platform - All Features Integrated
   - type: web
-    name: vibeai-backend
+    name: vibeai-complete-platform
     env: python
-    buildCommand: pip install --upgrade pip && pip install -r requirements-production.txt
-    startCommand: python -m uvicorn main_minimal:app --host 0.0.0.0 --port $PORT --log-level info
+    buildCommand: pip install --upgrade pip && pip install -r requirements-complete.txt
+    startCommand: python start_complete.py
     envVars:
       - key: GEMINI_API_KEY
         sync: false
@@ -19,44 +19,4 @@ services:
       - key: SEARCH_TIMEOUT
         value: "10"
     healthCheckPath: /health
-    autoDeploy: true
-    
-  # React Frontend (Advanced UI)
-  - type: web
-    name: vibeai-frontend
-    env: node
-    buildCommand: cd web && npm install && npm run build
-    startCommand: cd web && npm run serve
-    envVars:
-      - key: REACT_APP_API_URL
-        fromService:
-          type: web
-          name: vibeai-backend
-          property: host
-    autoDeploy: true
-    
-  # Streamlit Analytics Dashboard
-  - type: web
-    name: vibeai-analytics
-    env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: streamlit run analytics_dashboard.py --server.port=$PORT --server.address=0.0.0.0 --server.headless=true
-    envVars:
-      - key: GEMINI_API_KEY
-        sync: false
-      - key: STREAMLIT_SERVER_HEADLESS
-        value: "true"
-    autoDeploy: true
-    
-  # Premium Analytics Dashboard
-  - type: web
-    name: vibeai-premium
-    env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: streamlit run premium_analytics.py --server.port=$PORT --server.address=0.0.0.0 --server.headless=true
-    envVars:
-      - key: GEMINI_API_KEY
-        sync: false
-      - key: STREAMLIT_SERVER_HEADLESS
-        value: "true"
     autoDeploy: true
