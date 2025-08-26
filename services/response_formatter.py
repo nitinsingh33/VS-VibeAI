@@ -16,20 +16,23 @@ class ResponseFormatter:
     def format_enhanced_response(self, response: str, sources: List[Dict], 
                                 query: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Format the response with Gemini Deep Research style citations and structured output
+        Format the response with improved readability, proper citations, and structured output
         """
         # Reset source counter for each response
         self.source_counter = 1
         self.source_registry = {}
         
-        # Process and format the main response with Gemini-style citations
-        formatted_response, source_references = self._format_gemini_style_response(response, sources)
+        # Process and format the main response
+        formatted_response = self._format_main_content(response)
+        
+        # Create source citations and references
+        formatted_response = self._add_source_citations(formatted_response, sources)
         
         # Add relevance indicators
         relevance_info = self._generate_relevance_info(metadata)
         
-        # Create Gemini-style structured sources section
-        sources_section = self._create_gemini_style_sources(sources, source_references, metadata)
+        # Create structured sources section
+        sources_section = self._create_sources_section(sources, metadata)
         
         # Detect and format tables
         formatted_response = self._format_tables(formatted_response)
@@ -40,65 +43,6 @@ class ResponseFormatter:
         )
         
         return final_output
-    
-    def _format_gemini_style_response(self, response: str, sources: List[Dict]) -> tuple:
-        """Format response with Gemini Deep Research style numbered citations"""
-        # Clean existing citation patterns
-        response = re.sub(r'<[^>]+>', '', response)
-        response = re.sub(r'\^?\[\d+\]', '', response)
-        
-        # Create source registry with proper categorization
-        source_references = {}
-        source_counter = 1
-        
-        # Add numbered citations in Gemini style
-        # Pattern: Add citations after factual statements
-        citation_patterns = [
-            # Market data patterns
-            (r'(\d+\.?\d*\s*(?:units?|sales?|revenue|crore|lakh|percent|%)\s*(?:sold|sales?|revenue|growth))', 'Market Intelligence'),
-            (r'(market share|sales figures?|revenue growth|financial performance)', 'Market Intelligence'),
-            (r'(stock price|IPO|market cap|valuation)', 'Financial Reports'),
-            
-            # User feedback patterns  
-            (r'(users? (?:report|mention|complain|praise)|sentiment analysis|user feedback)', 'Social Media Intelligence'),
-            (r'(YouTube comments?|user experiences?|customer reviews?)', 'Social Media Intelligence'),
-            (r'(service (?:issues?|problems?|complaints?)|build quality concerns?)', 'Social Media Intelligence'),
-            
-            # Industry analysis patterns
-            (r'(industry (?:reports?|analysis|trends?)|market research)', 'Industry Reports'),
-            (r'(electric vehicle (?:market|industry|sector))', 'Industry Reports'),
-        ]
-        
-        formatted_response = response
-        used_citations = set()
-        
-        for pattern, source_type in citation_patterns:
-            matches = re.finditer(pattern, formatted_response, re.IGNORECASE)
-            for match in matches:
-                matched_text = match.group(1)
-                if matched_text.lower() not in used_citations:
-                    # Add numbered citation
-                    citation_key = f"[{source_counter}]"
-                    source_references[source_counter] = {
-                        'type': source_type,
-                        'context': matched_text,
-                        'sources': [s for s in sources if source_type.lower() in s.get('type', '').lower()][:1]
-                    }
-                    
-                    # Replace the first occurrence
-                    formatted_response = formatted_response.replace(
-                        matched_text, 
-                        f"{matched_text}{citation_key}", 
-                        1
-                    )
-                    
-                    used_citations.add(matched_text.lower())
-                    source_counter += 1
-                    
-                    if source_counter > 10:  # Limit citations
-                        break
-        
-        return formatted_response, source_references
     
     def _format_main_content(self, response: str) -> str:
         """Format the main response content with proper paragraphs and structure"""
@@ -271,104 +215,6 @@ class ResponseFormatter:
             })
         
         return structured_sources
-    
-    def _create_gemini_style_sources(self, sources: List[Dict], source_references: Dict, 
-                                   metadata: Dict[str, Any]) -> Dict[str, List[Dict]]:
-        """Create Gemini Deep Research style source categorization"""
-        structured_sources = {
-            'market_intelligence': [],
-            'social_media_intelligence': [], 
-            'industry_reports': [],
-            'financial_reports': [],
-            'research_analysis': []
-        }
-        
-        # Process source references from citations
-        for ref_num, ref_data in source_references.items():
-            source_type = ref_data['type']
-            context = ref_data['context']
-            source_list = ref_data['sources']
-            
-            # Create Gemini-style source entry
-            for source in source_list:
-                gemini_source = {
-                    'title': source.get('title', 'Research Source'),
-                    'description': f"Referenced for: {context}",
-                    'url': source.get('url', ''),
-                    'type': source_type,
-                    'citation_number': ref_num,
-                    'category': self._get_source_category(source_type)
-                }
-                
-                # Add video information if available
-                if 'video_title' in source:
-                    gemini_source['video_title'] = source['video_title']
-                if 'video_url' in source:
-                    gemini_source['video_url'] = source['video_url']
-                
-                # Categorize into appropriate section
-                if source_type == 'Market Intelligence':
-                    structured_sources['market_intelligence'].append(gemini_source)
-                elif source_type == 'Social Media Intelligence':
-                    structured_sources['social_media_intelligence'].append(gemini_source)
-                elif source_type == 'Industry Reports':
-                    structured_sources['industry_reports'].append(gemini_source)
-                elif source_type == 'Financial Reports':
-                    structured_sources['financial_reports'].append(gemini_source)
-        
-        # Add remaining uncategorized sources
-        for source in sources:
-            if not any(source.get('title') == ref_source.get('title') 
-                      for ref_data in source_references.values() 
-                      for ref_source in ref_data['sources']):
-                
-                # Determine category based on content
-                if 'youtube' in source.get('title', '').lower() or 'comment' in source.get('snippet', '').lower():
-                    category = 'social_media_intelligence'
-                    source_type = 'Social Media Intelligence'
-                elif any(keyword in source.get('title', '').lower() 
-                        for keyword in ['market', 'sales', 'revenue', 'industry']):
-                    category = 'market_intelligence'
-                    source_type = 'Market Intelligence'
-                elif any(keyword in source.get('title', '').lower() 
-                        for keyword in ['report', 'analysis', 'research']):
-                    category = 'industry_reports' 
-                    source_type = 'Industry Reports'
-                else:
-                    category = 'research_analysis'
-                    source_type = 'Research Analysis'
-                
-                structured_sources[category].append({
-                    'title': source.get('title', 'Research Source'),
-                    'description': source.get('snippet', 'Additional research source'),
-                    'url': source.get('url', ''),
-                    'type': source_type,
-                    'category': self._get_source_category(source_type)
-                })
-        
-        # Add AI analysis metadata
-        if metadata.get('youtube_data_used') or metadata.get('search_results_count'):
-            structured_sources['research_analysis'].append({
-                'title': 'SolysAI Enhanced Analysis',
-                'description': f"AI-powered analysis combining {metadata.get('youtube_comments_analyzed', 0)} user comments with {metadata.get('search_results_count', 0)} market intelligence sources",
-                'type': 'AI Research Analysis',
-                'category': 'AI Intelligence',
-                'processing_time': f"{metadata.get('processing_time', 0):.1f}ms"
-            })
-        
-        return structured_sources
-    
-    def _get_source_category(self, source_type: str) -> str:
-        """Get display category for source type"""
-        category_mapping = {
-            'Market Intelligence': '📊 Market Data',
-            'Social Media Intelligence': '💬 User Feedback', 
-            'Industry Reports': '📋 Industry Analysis',
-            'Financial Reports': '💰 Financial Data',
-            'Research Analysis': '🔬 AI Analysis',
-            'AI Research Analysis': '🤖 AI Intelligence'
-        }
-        return category_mapping.get(source_type, '📄 General Research')
     
     def _create_structured_output(self, formatted_response: str, sources_section: Dict, 
                                  relevance_info: Dict, metadata: Dict[str, Any]) -> Dict[str, Any]:

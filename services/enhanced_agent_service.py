@@ -6,7 +6,6 @@ import asyncio
 import time
 import json
 import os
-import glob
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 
@@ -15,8 +14,6 @@ from .gemini_service import GeminiService
 from .youtube_scraper import YouTubeCommentScraper
 from .export_service import ExportService
 from .temporal_analysis_service import TemporalAnalysisService
-from .conversation_memory_service import ConversationMemoryService
-from .enhanced_sentiment_analyzer import EnhancedSentimentAnalyzer
 from .conversation_memory_service import ConversationMemoryService
 
 class EnhancedAgentService:
@@ -27,7 +24,6 @@ class EnhancedAgentService:
         self.export_service = ExportService()
         self.temporal_service = TemporalAnalysisService()
         self.memory_service = ConversationMemoryService()
-        self.sentiment_analyzer = EnhancedSentimentAnalyzer()
         self.youtube_data_cache = {}
 
     async def load_youtube_data(self, force_refresh: bool = False, use_enhanced_scraping: bool = False, auto_update: bool = True) -> Dict[str, Any]:
@@ -105,20 +101,18 @@ class EnhancedAgentService:
         
         found_files = {}  # Initialize dictionary
         
-        # Look for the REAL YouTube comment data (priority order - LARGEST DATASET FIRST)
+        # Look for the REAL YouTube comment data (priority order)
         combined_patterns = [
-            "all_oem_comments_historical_20250817_170823.json",          # Priority 1: LARGEST DATASET (46K+ comments)
-            "all_oem_comments_10000_enhanced_20250817_003058.json",      # Priority 2: Enhanced 10K dataset  
-            "all_oem_comments_historical_20250818_124227.json",          # Priority 3: Smaller historical data
-            "all_oem_comments_historical_*.json",                       # Priority 4: Other historical data files
-            "real_youtube_comments_20250817.json",                      # Priority 5: NEW REAL DATA (10,000 authentic comments)
-            "real_youtube_comments_*.json",                             # Priority 6: Other real comment files
-            "all_oem_comments_7443_real_verified_20250817_013348.json", # Priority 7: Previous real data
-            "all_oem_comments_7443_real_verified_*.json",               # Priority 8: Other verified real data
-            "all_oem_comments_*_real_verified_*.json",                  # Priority 9: Other verified real data
-            "all_oem_comments_2500_total_*.json",                       # Priority 10: Original real data (500 per OEM)  
-            "all_oem_comments_*_total_*.json",                          # Priority 11: Other real scraped data
-            "all_oem_comments_july2025.json"                            # Priority 12: Legacy real data
+            "all_oem_comments_historical_20250817_170823.json",          # Priority 1: Latest historical data (Aug 17, 5PM)
+            "all_oem_comments_historical_*.json",                       # Priority 2: Other historical data files
+            "real_youtube_comments_20250817.json",                      # Priority 3: NEW REAL DATA (10,000 authentic comments)
+            "real_youtube_comments_*.json",                             # Priority 4: Other real comment files
+            "all_oem_comments_7443_real_verified_20250817_013348.json", # Priority 5: Previous real data
+            "all_oem_comments_7443_real_verified_*.json",               # Priority 6: Other verified real data
+            "all_oem_comments_*_real_verified_*.json",                  # Priority 7: Other verified real data
+            "all_oem_comments_2500_total_*.json",                       # Priority 8: Original real data (500 per OEM)  
+            "all_oem_comments_*_total_*.json",                          # Priority 9: Other real scraped data
+            "all_oem_comments_july2025.json"                            # Priority 10: Legacy real data
         ]
         
         # EXCLUDE enhanced/generated datasets - only use REAL YouTube data
@@ -127,7 +121,7 @@ class EnhancedAgentService:
             "all_oem_comments_*_enhanced_*.json"       # Exclude: Any enhanced dataset
         ]
         
-        # Check for combined files first (REAL data only) - prioritize by file size
+        # Check for combined files first (REAL data only)
         combined_files = []
         for pattern in combined_patterns:
             potential_files = glob.glob(pattern)
@@ -138,12 +132,9 @@ class EnhancedAgentService:
             combined_files.extend(potential_files)
         
         if combined_files:
-            # Sort by file size (largest first) to ensure we get the most complete dataset
-            combined_files.sort(key=lambda x: os.path.getsize(x), reverse=True)
-            latest_combined = combined_files[0]  # Take the largest file
+            latest_combined = max(combined_files, key=os.path.getctime)
             found_files['_combined'] = latest_combined
-            print(f"🎯 Found LARGEST REAL YouTube dataset: {latest_combined}")
-            print(f"📊 File size: {os.path.getsize(latest_combined) / (1024*1024):.1f} MB")
+            print(f"🎯 Found REAL YouTube data: {latest_combined}")
             print(f"📊 Using authentic user comments only (no generated data)")
         
         # Look for individual OEM files with REAL comments (fallback)
@@ -165,53 +156,6 @@ class EnhancedAgentService:
                     found_files[oem_name] = latest_file
         
         return found_files if found_files else None
-
-    def _enhance_comment_data(self, comments: List[Dict]) -> List[Dict]:
-        """Enhance comment data with video information and metadata"""
-        enhanced_comments = []
-        
-        for comment in comments:
-            enhanced_comment = comment.copy()
-            
-            # Add video URL if video_id exists
-            if 'video_id' in comment and comment['video_id']:
-                enhanced_comment['video_url'] = f"https://www.youtube.com/watch?v={comment['video_id']}"
-                
-                # Try to get video title from YouTube API (cached approach)
-                video_title = self._get_video_title_cached(comment['video_id'])
-                if video_title:
-                    enhanced_comment['video_title'] = video_title
-            
-            # Ensure required fields exist
-            if 'extraction_method' not in enhanced_comment:
-                enhanced_comment['extraction_method'] = 'youtube_api'
-            
-            if 'verified_real' not in enhanced_comment:
-                enhanced_comment['verified_real'] = True
-            
-            enhanced_comments.append(enhanced_comment)
-        
-        return enhanced_comments
-    
-    def _get_video_title_cached(self, video_id: str) -> str:
-        """Get video title with caching to avoid API overuse"""
-        if not hasattr(self, '_video_title_cache'):
-            self._video_title_cache = {}
-        
-        if video_id in self._video_title_cache:
-            return self._video_title_cache[video_id]
-        
-        try:
-            # Use YouTube scraper to get video info
-            video_info = self.youtube_scraper.get_video_info(video_id)
-            title = video_info.get('title', f'Video {video_id}')
-            self._video_title_cache[video_id] = title
-            return title
-        except:
-            # Fallback title
-            fallback_title = f'YouTube Video {video_id}'
-            self._video_title_cache[video_id] = fallback_title
-            return fallback_title
 
     def _load_latest_scraped_data(self, file_dict: Dict[str, str]) -> Dict[str, List[Dict]]:
         """Load the latest scraped data files with priority for large-scale datasets"""
@@ -242,8 +186,7 @@ class EnhancedAgentService:
                         for oem_name, oem_data in data.items():
                             if isinstance(oem_data, list):
                                 # Flat format: OEM -> [comments]
-                                enhanced_comments = self._enhance_comment_data(oem_data)
-                                combined_data[oem_name] = enhanced_comments
+                                combined_data[oem_name] = oem_data
                             elif isinstance(oem_data, dict):
                                 # Nested format: OEM -> Year -> Month -> [comments]
                                 oem_comments = []
@@ -254,8 +197,7 @@ class EnhancedAgentService:
                                                 oem_comments.extend(comments)
                                     elif isinstance(year_data, list):
                                         oem_comments.extend(year_data)
-                                enhanced_comments = self._enhance_comment_data(oem_comments)
-                                combined_data[oem_name] = enhanced_comments
+                                combined_data[oem_name] = oem_comments
                 
                 # Report statistics - focus on REAL comment verification
                 total_comments = sum(len(comments) for comments in combined_data.values())
@@ -351,12 +293,12 @@ class EnhancedAgentService:
         return False
     
     def _extract_comments_for_export(self, query: str, youtube_data: Dict[str, List[Dict]]) -> List[Dict]:
-        """Extract comments relevant to query for export with ALL 10 OEMs support"""
+        """Extract comments relevant to query for export"""
         relevant_comments = []
         query_lower = query.lower()
         keywords = query_lower.split()
         
-        # Enhanced OEM mapping including ALL 10 OEMs
+        # Check if user wants ALL comments for a specific OEM
         oem_mapping = {
             'ola': 'Ola Electric',
             'ola electric': 'Ola Electric',
@@ -369,25 +311,10 @@ class EnhancedAgentService:
             'ather': 'Ather',
             'hero': 'Hero Vida',
             'hero vida': 'Hero Vida',
-            'vida': 'Hero Vida',
-            'revolt': 'Revolt',
-            'ultraviolette': 'Ultraviolette',
-            'ultraviolette f77': 'Ultraviolette',
-            'f77': 'Ultraviolette',
-            'bgauss': 'BGauss',
-            'river': 'River Mobility',
-            'river mobility': 'River Mobility',
-            'river indie': 'River Mobility',
-            'ampere': 'Ampere'
+            'vida': 'Hero Vida'
         }
         
-        # All 10 supported OEMs
-        all_supported_oems = [
-            'Ola Electric', 'Ather', 'Bajaj Chetak', 'TVS iQube', 'Hero Vida', 
-            'Ampere', 'River Mobility', 'Ultraviolette', 'Revolt', 'BGauss'
-        ]
-        
-        # Check if user wants ALL comments for a specific OEM
+        # Check if user wants all comments for a specific OEM
         target_oem = None
         for oem_key, oem_name in oem_mapping.items():
             if oem_key in query_lower:
@@ -400,8 +327,7 @@ class EnhancedAgentService:
             'all 2,000', '2,000 comments', 'all 2500', '2500 comments', 
             'all 2,500', '2,500 comments', 'complete dataset', 'full dataset',
             'entire dataset', 'export all', 'download all', 'all data', 'export data',
-            'premium data', 'full export', 'complete export', 'maximum data',
-            'all oems', 'all 10 oems', 'all ten oems'
+            'premium data', 'full export', 'complete export', 'maximum data'
         ]
         
         wants_all_comments = any(phrase in query_lower for phrase in all_comments_patterns)
@@ -414,35 +340,25 @@ class EnhancedAgentService:
                     comment_export = comment.copy()
                     comment_export['relevance_score'] = 10  # High relevance for all comments
                     comment_export['export_timestamp'] = datetime.now().isoformat()
-                    comment_export['oem'] = target_oem
                     relevant_comments.append(comment_export)
                 return relevant_comments
         
-        # If requesting ALL comments from ALL OEMs (enhanced to include all 10)
+        # If requesting ALL comments from ALL OEMs (2500 total)
         if wants_all_comments and not target_oem:
-            print(f"📊 Extracting ALL comments from ALL 10 OEMs (Full Dataset)")
-            for oem_name in all_supported_oems:
-                if oem_name in youtube_data:
-                    comments = youtube_data[oem_name]
-                    print(f"📁 Adding {len(comments)} comments from {oem_name}")
-                    for comment in comments:
-                        comment_export = comment.copy()
-                        comment_export['relevance_score'] = 10  # High relevance for all comments
-                        comment_export['export_timestamp'] = datetime.now().isoformat()
-                        comment_export['oem'] = oem_name  # Add OEM identifier for full dataset
-                        relevant_comments.append(comment_export)
-                else:
-                    print(f"⚠️  No data available for {oem_name}")
-            
-            print(f"✅ Total comments extracted from all 10 OEMs: {len(relevant_comments)}")
+            print(f"📊 Extracting ALL comments from ALL OEMs (Full Dataset)")
+            for oem_name, comments in youtube_data.items():
+                print(f"📁 Adding {len(comments)} comments from {oem_name}")
+                for comment in comments:
+                    comment_export = comment.copy()
+                    comment_export['relevance_score'] = 10  # High relevance for all comments
+                    comment_export['export_timestamp'] = datetime.now().isoformat()
+                    comment_export['oem'] = oem_name  # Add OEM identifier for full dataset
+                    relevant_comments.append(comment_export)
+            print(f"✅ Total comments extracted: {len(relevant_comments)}")
             return relevant_comments
         
-        # Otherwise, extract relevant comments based on keywords (include all 10 OEMs)
-        for oem_name in all_supported_oems:
-            if oem_name not in youtube_data:
-                continue
-                
-            comments = youtube_data[oem_name]
+        # Otherwise, extract relevant comments based on keywords
+        for oem_name, comments in youtube_data.items():
             # If specific OEM mentioned, prioritize that OEM
             oem_boost = 5 if target_oem == oem_name else 0
             
@@ -462,7 +378,7 @@ class EnhancedAgentService:
         
         # Enhanced logic for determining how many comments to return
         if wants_all_comments:
-            print(f"📊 Returning ALL {len(relevant_comments)} relevant comments from all 10 OEMs")
+            print(f"📊 Returning ALL {len(relevant_comments)} relevant comments (user requested full dataset)")
             return relevant_comments  # Return ALL relevant comments
         elif any(phrase in query_lower for phrase in ['2000', 'two thousand', '2,000']):
             return relevant_comments[:2000]  # Return up to 2000
@@ -601,8 +517,6 @@ class EnhancedAgentService:
             # Step 3: Load YouTube data if requested
             youtube_context = ""
             youtube_summary = ""
-            youtube_data = {}  # Initialize empty dict to avoid scope issues
-            
             if use_youtube_data:
                 youtube_data = await self.load_youtube_data()
                 youtube_summary = self.youtube_scraper.get_oem_summary(youtube_data)
@@ -624,7 +538,7 @@ class EnhancedAgentService:
                     else:
                         print("⚠️ No comments found for specified time period")
                 
-                youtube_context = await self._extract_relevant_youtube_comments(query, youtube_data)
+                youtube_context = self._extract_relevant_youtube_comments(query, youtube_data)
 
             # Step 4: Perform Google search
             search_results = []
@@ -640,26 +554,11 @@ class EnhancedAgentService:
             # Step 5: Combine contexts with memory and temporal data
             combined_context = self._combine_enhanced_contexts(
                 query, youtube_context, search_context, youtube_summary, 
-                conversation_context, temporal_analysis_data, time_period, search_results
+                conversation_context, temporal_analysis_data, time_period
             )
 
-            # Step 6: Generate response using Gemini with timeout handling
-            try:
-                response = await self.gemini_service.generate_response(query, combined_context)
-            except Exception as gemini_error:
-                error_msg = str(gemini_error)
-                if "timeout" in error_msg.lower() or "504" in error_msg or "deadline" in error_msg.lower():
-                    print("⚠️ Gemini timeout detected, trying with simplified context...")
-                    # Simplify context for retry
-                    simplified_context = self._simplify_context_for_retry(combined_context)
-                    try:
-                        response = await self.gemini_service.generate_response(query, simplified_context)
-                    except Exception as retry_error:
-                        print(f"❌ Retry also failed: {retry_error}")
-                        response = self._generate_fallback_response(query, youtube_data, temporal_analysis_data)
-                else:
-                    print(f"❌ Gemini error: {gemini_error}")
-                    response = self._generate_fallback_response(query, youtube_data, temporal_analysis_data)
+            # Step 6: Generate response using Gemini
+            response = await self.gemini_service.generate_response(query, combined_context)
 
             processing_time = (time.time() - start_time) * 1000
 
@@ -744,8 +643,8 @@ class EnhancedAgentService:
             print(f"❌ Enhanced processing error: {e}")
             raise
 
-    async def _extract_relevant_youtube_comments(self, query: str, youtube_data: Dict[str, List[Dict]], max_comments: int = 5000) -> str:
-        """Extract relevant YouTube comments with enhanced sentiment classification - Analyzes up to 5000 comments for comprehensive analysis of 46K+ dataset"""
+    def _extract_relevant_youtube_comments(self, query: str, youtube_data: Dict[str, List[Dict]], max_comments: int = 50) -> str:
+        """Extract relevant YouTube comments based on query with improved relevance scoring"""
         all_relevant_comments = []
         query_lower = query.lower()
         
@@ -767,45 +666,14 @@ class EnhancedAgentService:
             if keyword in keyword_variants:
                 expanded_keywords.update(keyword_variants[keyword])
         
-        # Process comments with enhanced sentiment analysis
-        full_oem_sentiment = {}  # Track full OEM sentiment before filtering
         for oem_name, comments in youtube_data.items():
-            if not comments:
-                continue
-                
             oem_mentioned = oem_name.lower() in query_lower
             
-            # Apply ADVANCED sentiment analysis to comments batch
-            try:
-                enhanced_comments = await self.sentiment_analyzer.analyze_comment_batch(
-                    comments, target_oem=oem_name
-                )
-                print(f"✅ ADVANCED sentiment analysis completed for {oem_name}: {len(enhanced_comments)} comments")
-                
-                # Calculate full OEM sentiment statistics before filtering
-                full_sentiment_counts = {'positive': 0, 'negative': 0, 'neutral': 0}
-                for comment in enhanced_comments:
-                    classification = comment.get('sentiment_classification', {})
-                    sentiment = classification.get('sentiment', 'neutral')
-                    full_sentiment_counts[sentiment] += 1
-                
-                full_oem_sentiment[oem_name] = {
-                    'total': len(enhanced_comments),
-                    'sentiment': full_sentiment_counts
-                }
-                
-            except Exception as e:
-                print(f"⚠️ Advanced sentiment analysis failed for {oem_name}: {e}")
-                enhanced_comments = comments  # Fallback to original comments
-            
-            for comment in enhanced_comments:
+            for comment in comments:
                 comment_text = comment.get('text', '').lower()
                 
-                # Get enhanced classification
-                classification = comment.get('sentiment_classification', {})
-                
-                # Calculate relevance score with enhanced factors (more inclusive scoring)
-                relevance_score = 1  # Start with base score of 1 to include more comments
+                # Calculate relevance score
+                relevance_score = 0
                 
                 # Direct keyword matches (highest weight)
                 for keyword in expanded_keywords:
@@ -816,38 +684,19 @@ class EnhancedAgentService:
                 if oem_mentioned:
                     relevance_score += 2
                 
-                # If this is the target OEM, give additional relevance
-                if oem_name.lower() in query_lower:
-                    relevance_score += 5
+                # Check for sentiment indicators
+                positive_words = ['good', 'great', 'excellent', 'best', 'amazing', 'love', 'recommend']
+                negative_words = ['bad', 'worst', 'terrible', 'issue', 'problem', 'defect', 'poor', 'disappointing']
                 
-                # Product relevance bonus (from enhanced analysis)
-                product_relevance = classification.get('product_relevance', 'low')
-                if product_relevance == 'high':
-                    relevance_score += 4
-                elif product_relevance == 'medium':
-                    relevance_score += 2
-                elif product_relevance == 'low':
-                    relevance_score += 1  # Still give some points for low relevance
+                sentiment_score = 0
+                for word in positive_words:
+                    if word in comment_text:
+                        sentiment_score += 1
+                for word in negative_words:
+                    if word in comment_text:
+                        sentiment_score += 1
                 
-                # Context relevance bonus
-                context = classification.get('context', 'general')
-                if any(ctx in query_lower for ctx in ['service', 'support']) and context == 'service':
-                    relevance_score += 3
-                elif any(ctx in query_lower for ctx in ['experience', 'review']) and context == 'experience':
-                    relevance_score += 3
-                elif any(ctx in query_lower for ctx in ['product', 'feature']) and context == 'product':
-                    relevance_score += 3
-                
-                # Sentiment indicators with sarcasm adjustment
-                sentiment = classification.get('sentiment', 'neutral')
-                sarcasm_detected = classification.get('sarcasm_detected', False)
-                confidence = classification.get('confidence', 0.5)
-                
-                # Boost relevance for high-confidence classifications
-                if confidence > 0.8:
-                    relevance_score += 2
-                elif confidence > 0.6:
-                    relevance_score += 1
+                relevance_score += min(sentiment_score, 2)  # Cap sentiment bonus
                 
                 # Length bonus for detailed comments
                 if len(comment_text) > 100:
@@ -860,151 +709,46 @@ class EnhancedAgentService:
                 if likes > 20:
                     relevance_score += 1
                 
-                # Include comment if relevant (more permissive criteria)
-                if relevance_score >= 1:  # Changed from > 0 to >= 1 for broader inclusion
+                # Include comment if relevant
+                if relevance_score > 0:
                     all_relevant_comments.append({
                         'comment': comment,
                         'oem': oem_name,
-                        'relevance': relevance_score,
-                        'classification': classification
+                        'relevance': relevance_score
                     })
         
         # Sort by relevance score (descending)
         all_relevant_comments.sort(key=lambda x: x['relevance'], reverse=True)
         
-        # Ensure we have enough comments - if too few, add more from each OEM for comprehensive 46K+ analysis
-        if len(all_relevant_comments) < max_comments // 2:  # If less than 50% of target (more aggressive for full dataset)
-            print(f"⚠️ Only {len(all_relevant_comments)} relevant comments found, adding more from 46K+ dataset...")
-            
-            # Add more comments with minimal filtering for comprehensive analysis
-            for oem_name, comments in youtube_data.items():
-                if len(all_relevant_comments) >= max_comments:
-                    break
-                    
-                # Add recent and high-engagement comments regardless of keyword matching
-                additional_comments = []
-                for comment in comments:
-                    if len(all_relevant_comments) + len(additional_comments) >= max_comments:
-                        break
-                        
-                    # Skip if already included
-                    if any(item['comment'].get('text') == comment.get('text') for item in all_relevant_comments):
-                        continue
-                        
-                    # Add comments with reasonable engagement or length (more inclusive for 46K+ dataset)
-                    if (comment.get('likes', 0) > 1 or len(comment.get('text', '')) > 30):
-                        classification = comment.get('sentiment_classification', {})
-                        additional_comments.append({
-                            'comment': comment,
-                            'oem': oem_name,
-                            'relevance': 1,  # Base relevance
-                            'classification': classification
-                        })
-                
-                all_relevant_comments.extend(additional_comments)
-        
-        # Format top comments with enhanced information
+        # Format top comments
         formatted_comments = []
-        sarcasm_count = 0
-        multilingual_count = 0
-        high_relevance_count = 0
-        
         for item in all_relevant_comments[:max_comments]:
             comment = item['comment']
             oem_name = item['oem']
-            classification = item['classification']
-            
-            # Enhanced formatting with classification details
-            sentiment = classification.get('sentiment', 'neutral')
-            confidence = classification.get('confidence', 0.5)
-            sarcasm_detected = classification.get('sarcasm_detected', False)
-            language_mix = classification.get('language_mix', False)
-            product_relevance = classification.get('product_relevance', 'unknown')
-            context = classification.get('context', 'general')
-            
-            # Count special cases for summary
-            if sarcasm_detected:
-                sarcasm_count += 1
-            if language_mix:
-                multilingual_count += 1
-            if product_relevance == 'high':
-                high_relevance_count += 1
-            
-            # Format sentiment indicator
-            sentiment_indicator = f"{sentiment.upper()}"
-            if sarcasm_detected:
-                sentiment_indicator += " (SARCASM DETECTED)"
-            if language_mix:
-                sentiment_indicator += " (MULTILINGUAL)"
             
             formatted_comment = (
-                f"**{oem_name} User Feedback - {sentiment_indicator}**\n"
-                f"📊 Classification: Relevance={item['relevance']}, Confidence={confidence:.2f}, Context={context}\n"
-                f"💬 Comment: {comment.get('text', '')}\n"
-                f"👤 Author: {comment.get('author', 'Anonymous')}\n"
-                f"👍 Likes: {comment.get('likes', 0)} | 📅 Date: {comment.get('date', 'Unknown')}\n"
-                f"🎥 Video: {comment.get('video_title', 'YouTube Video')}\n"
-                f"🔗 Source: {comment.get('video_url', 'N/A')}"
+                f"**{oem_name} User Feedback (Relevance: {item['relevance']}, {comment.get('date', 'Unknown')}):**\n"
+                f"Comment: {comment.get('text', '')}\n"
+                f"Author: {comment.get('author', 'Anonymous')}\n"
+                f"Likes: {comment.get('likes', 0)}\n"
+                f"Video: {comment.get('video_title', 'YouTube Video')}\n"
+                f"Source: {comment.get('video_url', 'N/A')}"
             )
-            
-            # Add classification insights if available
-            if classification.get('key_factors'):
-                formatted_comment += f"\n🔍 Analysis Factors: {', '.join(classification['key_factors'])}"
-            
             formatted_comments.append(formatted_comment)
         
         result = '\n\n---\n\n'.join(formatted_comments)
         
-        # Add enhanced summary statistics
+        # Add summary statistics
         if formatted_comments:
             oem_counts = {}
-            sentiment_counts = {'positive': 0, 'negative': 0, 'neutral': 0}
-            
             for item in all_relevant_comments[:max_comments]:
                 oem = item['oem']
                 oem_counts[oem] = oem_counts.get(oem, 0) + 1
-                
-                sentiment = item['classification'].get('sentiment', 'neutral')
-                sentiment_counts[sentiment] += 1
             
-            avg_confidence = sum(
-                item['classification'].get('confidence', 0.5) 
-                for item in all_relevant_comments[:max_comments]
-            ) / len(formatted_comments)
-            
-            summary = f"\n\n=== ENHANCED ANALYSIS SUMMARY ===\n"
-            summary += f"� GEMINI INSTRUCTION: USE ONLY THE PERCENTAGES SHOWN BELOW - DO NOT USE 30.3%, 27.0%, 42.7% OR 21.1%, 38.3%, 40.6% WHICH ARE FICTIONAL\n"
-            summary += f"�📊 Total comments analyzed: {len(formatted_comments)} (from pool of {len(all_relevant_comments)} relevant comments)\n"
-            summary += f"📈 Comments per OEM: {', '.join([f'{oem}: {count}' for oem, count in oem_counts.items()])}\n"
-            
-            # Add full OEM sentiment statistics for context
-            if full_oem_sentiment:
-                summary += f"\n=== FULL OEM DATASET SENTIMENT (Before Filtering) - USE THESE EXACT PERCENTAGES ===\n"
-                for oem_name, stats in full_oem_sentiment.items():
-                    if stats['total'] > 0:
-                        pos_pct = (stats['sentiment']['positive'] / stats['total']) * 100
-                        neg_pct = (stats['sentiment']['negative'] / stats['total']) * 100
-                        neu_pct = (stats['sentiment']['neutral'] / stats['total']) * 100
-                        summary += f"🏢 {oem_name}: {stats['total']} total comments - Positive: {stats['sentiment']['positive']} ({pos_pct:.1f}%), Negative: {stats['sentiment']['negative']} ({neg_pct:.1f}%), Neutral: {stats['sentiment']['neutral']} ({neu_pct:.1f}%)\n"
-            
-            # Calculate sentiment percentages for filtered relevant comments
-            total_sentiment_comments = sum(sentiment_counts.values())
-            if total_sentiment_comments > 0:
-                positive_pct = (sentiment_counts['positive'] / total_sentiment_comments) * 100
-                negative_pct = (sentiment_counts['negative'] / total_sentiment_comments) * 100
-                neutral_pct = (sentiment_counts['neutral'] / total_sentiment_comments) * 100
-                
-                summary += f"\n=== FILTERED RELEVANT COMMENTS SENTIMENT ===\n"
-                summary += f"💭 Sentiment distribution: Positive={sentiment_counts['positive']} ({positive_pct:.1f}%), Negative={sentiment_counts['negative']} ({negative_pct:.1f}%), Neutral={sentiment_counts['neutral']} ({neutral_pct:.1f}%)\n"
-            else:
-                summary += f"💭 Sentiment distribution: Positive={sentiment_counts['positive']}, Negative={sentiment_counts['negative']}, Neutral={sentiment_counts['neutral']}\n"
-            summary += f"🎭 Sarcasm detected: {sarcasm_count} comments\n"
-            summary += f"🌐 Multilingual comments: {multilingual_count} comments\n"
-            summary += f"🎯 High product relevance: {high_relevance_count} comments\n"
-            summary += f"📊 Average classification confidence: {avg_confidence:.2f}\n"
-            summary += f"🤖 Analysis method: Enhanced AI + Rules with sarcasm detection (Up to 5000 comments analyzed per query from 46K+ dataset)\n"
-            summary += f"🔍 Query optimization: Analyzing most relevant comments from 46,367 total dataset with improved relevance scoring\n"
-            summary += f"⚡ Fallback enabled: Ensures comprehensive analysis even for niche queries from full dataset"
+            summary = f"\n\n=== ANALYSIS SUMMARY ===\n"
+            summary += f"Total relevant comments analyzed: {len(formatted_comments)}\n"
+            summary += f"Comments per OEM: {', '.join([f'{oem}: {count}' for oem, count in oem_counts.items()])}\n"
+            summary += f"Average relevance score: {sum(item['relevance'] for item in all_relevant_comments[:max_comments]) / len(formatted_comments):.1f}"
             
             result += summary
         
@@ -1036,23 +780,17 @@ class EnhancedAgentService:
     def _combine_enhanced_contexts(self, query: str, youtube_context: str, search_context: str, 
                                  youtube_summary: str, conversation_context: str = "", 
                                  temporal_analysis: Dict[str, Any] = None, 
-                                 time_period: Dict[str, Any] = None,
-                                 search_results: List[Dict] = None) -> str:
-        """Combine all contexts with proper source attribution and separation"""
+                                 time_period: Dict[str, Any] = None) -> str:
+        """Combine all contexts including memory and temporal data for Gemini"""
         
         context_parts = [
             f"USER QUERY: {query}",
             ""
         ]
         
-        # Count actual sources for validation
-        youtube_comment_count = youtube_context.count('Comment:') if youtube_context else 0
-        search_source_count = len(search_results) if search_results else 0
-        
         # Add conversation context if available
         if conversation_context:
             context_parts.extend([
-                "=== CONVERSATION CONTEXT ===",
                 conversation_context,
                 ""
             ])
@@ -1066,92 +804,60 @@ class EnhancedAgentService:
                 ""
             ])
         
-        # SECTION 1: YOUTUBE COMMENT DATA (User Feedback)
         context_parts.extend([
-            "=== SECTION 1: REAL YOUTUBE USER FEEDBACK DATA (August 2025) ===",
-            f"SOURCE TYPE: Social Media Intelligence - User Comments",
-            f"Dataset: Verified comments from Indian EV users (Analyzed: {youtube_comment_count} comments)",
-            f"Coverage: All 10 OEMs including Ola Electric, Ather, Bajaj Chetak, TVS iQube, Hero Vida, Revolt, Ultraviolette, BGauss, River Mobility, Ampere",
+            "=== REAL YOUTUBE USER FEEDBACK DATA (August 2025) ===",
+            f"Dataset: 2,500+ verified comments from Indian EV users",
             youtube_summary if youtube_summary else "No YouTube data available",
             ""
         ])
         
         if youtube_context:
             context_parts.extend([
-                "=== RELEVANT USER COMMENTS WITH VIDEO SOURCES ===",
-                "NOTE: These are ONLY user opinions from YouTube videos, NOT official sales/market data",
+                "=== RELEVANT USER COMMENTS WITH SOURCES ===",
                 youtube_context,
                 ""
             ])
         
-        # SECTION 2: WEB SEARCH DATA (Market Intelligence)
         if search_context:
             context_parts.extend([
-                f"=== SECTION 2: CURRENT WEB SEARCH RESULTS - MARKET INTELLIGENCE ===",
-                f"SOURCE TYPE: Market Research & Industry Reports ({search_source_count} sources)",
-                "NOTE: This includes official sales data, market reports, and industry analysis",
+                "=== CURRENT WEB SEARCH RESULTS WITH SOURCES ===",
                 search_context,
                 ""
             ])
         
-        # Enhanced validation instructions to prevent source confusion
-        context_parts.extend([
-            "=== CRITICAL SOURCE ATTRIBUTION GUIDELINES ===",
-            f"AVAILABLE DATA SOURCES:",
-            f"1. YouTube Comments: {youtube_comment_count} user feedback comments (OPINION DATA ONLY)",
-            f"2. Web Search Results: {search_source_count} market intelligence sources (OFFICIAL DATA)",
-            "",
-            "MANDATORY SOURCE RULES:",
-            "- YouTube comments = User opinions, sentiment, experience feedback ONLY",
-            "- Web search = Official sales data, market reports, industry statistics, price info",
-            "- NEVER attribute sales numbers, market share, or official data to YouTube comments",
-            "- NEVER attribute user opinions or sentiment to official market reports",
-            "- Always specify the exact source type in your citations",
-            ""
-        ])
-        
-        # Enhanced instructions with proper source separation
+        # Enhanced instructions with temporal and memory awareness
         context_parts.append("""
-=== ENHANCED RESPONSE INSTRUCTIONS WITH SOURCE CLARITY ===
-You are an expert Indian electric two-wheeler market analyst. Follow these STRICT source attribution guidelines:
+=== ENHANCED RESPONSE INSTRUCTIONS ===
+You are an expert Indian electric two-wheeler market analyst with memory and temporal analysis capabilities. Follow these strict guidelines:
 
-1. **CLEAR SOURCE SEPARATION**: 
-   - YouTube Comments = User sentiment, experiences, opinions, complaints, praise
-   - Web Search = Official data, sales figures, market reports, financial data, specifications
+1. **QUERY FOCUS**: Answer ONLY the specific question asked. Use conversation context to provide continuity.
 
-2. **MODERN CITATION FORMAT** (like ChatGPT/Gemini):
-   - Use numbered citations in brackets: [1], [2], [3]
-   - YouTube user feedback: "According to user sentiment analysis [1]"
-   - Official market data: "Industry reports indicate [2]"
-   - Sales/financial data: "Market data shows [3]"
-   - Multiple sources: "Based on analysis [1][2]"
+2. **TEMPORAL AWARENESS**: If time period is specified, focus analysis on that period. Compare with other periods if relevant.
 
-3. **PROHIBITED ATTRIBUTIONS**:
-   - ❌ "Sales data from YouTube comments" 
-   - ❌ "Market share according to user feedback"
-   - ❌ "Official pricing from user comments"
-   - ✅ "User sentiment shows satisfaction" (YouTube)
-   - ✅ "Official sales figures indicate growth" (Web Search)
+3. **MANDATORY CITATIONS**: After every factual statement, add source in format:
+   - YouTube comments: <YouTube_Comments_[OEM_Name]>
+   - Web search: <Web_Search_[Domain]>
+   - Video data: <Video_[Title_Summary]>
+   - Temporal analysis: <Temporal_Analysis_[Period]>
+   - Previous conversation: <Conversation_Context>
 
 4. **RESPONSE STRUCTURE**:
-   - Direct answer with proper source attribution
-   - Supporting evidence clearly separated by source type
-   - User sentiment insights (YouTube) vs Market data (Web Search)
-   - Conclusion with appropriate source references
+   - Direct answer to query (1-2 sentences)
+   - Temporal insights (if time period specified)
+   - Supporting evidence with sources
+   - Key insights with context from conversation history
+   - Conclusion/recommendation (if applicable)
 
-5. **GEMINI DEEP RESEARCH STYLE FORMATTING**:
-   - Use numbered source references [1], [2], [3]
-   - Categorize sources: Market Intelligence, Social Media Intelligence, Industry Reports
-   - Provide brief source descriptions in citation format
+5. **MEMORY INTEGRATION**: Reference previous discussions when relevant. Build on established context.
 
-EXAMPLE PROPER CITATION:
-"Ola Electric reported 50,000 unit sales in July 2024^[1][Market_Intelligence]. However, user sentiment analysis reveals mixed feedback about service quality^[2][Social_Media_Intelligence]."
+6. **BRAND STRENGTH ANALYSIS**: When analyzing brand performance, consider temporal trends and conversation history.
 
-Sources:
-[1] Market Intelligence: Industry sales report - Official OEM data
-[2] Social Media Intelligence: YouTube user comments analysis - Consumer feedback
+7. **TABLE DETECTION**: If query asks for comparison/ranking/list, format as table with clear headers.
 
-Please provide a response with crystal-clear source attribution and proper categorization.
+EXAMPLE PROPER CITATION WITH TEMPORAL DATA:
+"In August 2024, Ola Electric users frequently reported service delays <YouTube_Comments_Ola_Electric><Temporal_Analysis_August_2024>. This represents a 15% increase from our previous discussion about July 2024 performance <Conversation_Context>."
+
+Please provide a focused, well-sourced response that directly addresses the user's specific question with full awareness of conversation history and temporal context.
 """)
         
         return '\n'.join(context_parts)
@@ -1322,40 +1028,3 @@ Please provide a response with crystal-clear source attribution and proper categ
         }
         
         return base_status
-
-    def _simplify_context_for_retry(self, context: str) -> str:
-        """Simplify context for timeout retry by reducing length"""
-        # If context is too long, truncate it intelligently
-        if len(context) > 8000:
-            # Keep first and last parts, truncate middle
-            first_part = context[:3000]
-            last_part = context[-2000:]
-            simplified = f"{first_part}\n\n[... content truncated for processing ...]\n\n{last_part}"
-            print(f"📝 Context simplified from {len(context)} to {len(simplified)} characters")
-            return simplified
-        return context
-
-    def _generate_fallback_response(self, query: str, youtube_data: Dict, temporal_data: Any = None) -> str:
-        """Generate a fallback response when Gemini fails"""
-        print("🔄 Generating fallback response...")
-        
-        # Basic analysis without AI
-        response_parts = [
-            f"⚠️ **Note**: This is a simplified analysis due to processing timeout.\n",
-            f"**Query**: {query}\n"
-        ]
-        
-        if youtube_data:
-            total_comments = sum(len(comments) for comments in youtube_data.values())
-            oems = list(youtube_data.keys())
-            response_parts.append(f"**Data Available**: {total_comments} comments across {len(oems)} OEMs ({', '.join(oems)})\n")
-        
-        if temporal_data:
-            response_parts.append(f"**Temporal Analysis**: Data available but could not be processed due to timeout.\n")
-        
-        response_parts.extend([
-            "\n**Recommendation**: Try a more specific query or break down your analysis into smaller parts.\n",
-            "For complex trend analysis, consider using the Direct Export feature for detailed reports."
-        ])
-        
-        return "\n".join(response_parts)
