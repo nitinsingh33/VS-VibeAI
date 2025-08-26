@@ -1,31 +1,67 @@
-# Render.com deployment configuration
+# VibeAI Render Configuration - Optimized for Free Tier
+
 services:
+  # Main Backend Service (Free Tier)
   - type: web
-    name: solysai-sentiment-app
-    env: python
+    name: vibeai-backend
+    runtime: python3
+    plan: free
     region: oregon
-    plan: starter
-    buildCommand: pip install -r requirements.txt
-    startCommand: python main.py
-    envVars:
-      - key: PORT
-        value: 8000
-      - key: SERPER_API_KEY
-        sync: false  # Will be set manually in Render dashboard
-      - key: GEMINI_API_KEY
-        sync: false  # Will be set manually in Render dashboard
-      - key: MAX_SEARCH_RESULTS
-        value: 5
-      - key: SEARCH_TIMEOUT
-        value: 10000
-      - key: RESPONSE_TIMEOUT
-        value: 30000
-      - key: PYTHONPATH
-        value: .
-      - key: PYTHON_VERSION
-        value: 3.11
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+    startCommand: python -m uvicorn main:app --host 0.0.0.0 --port $PORT --workers 1
     healthCheckPath: /api/health
-    autoDeploy: true
-    rootDir: .
-    domains:
-      - solysai-sentiment-analysis.onrender.com
+    envVars:
+      - key: SERPER_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: YOUTUBE_API_KEY
+        sync: false
+      - key: RESPONSE_TIMEOUT
+        value: "120"
+      - key: MAX_SEARCH_RESULTS
+        value: "5"
+      - key: SEARCH_TIMEOUT
+        value: "10"
+      - key: PYTHONPATH
+        value: "/opt/render/project/src"
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+
+  # Analytics Dashboard (Free Tier)
+  - type: web
+    name: vibeai-analytics
+    runtime: python3
+    plan: free
+    region: oregon
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+      pip install streamlit
+    startCommand: streamlit run analytics_dashboard.py --server.port $PORT --server.address 0.0.0.0 --server.enableXsrfProtection false --server.enableCORS false
+    envVars:
+      - key: BACKEND_URL
+        fromService:
+          type: web
+          name: vibeai-backend
+          property: host
+
+  # Premium Dashboard (Free Tier)  
+  - type: web
+    name: vibeai-premium
+    runtime: python3
+    plan: free
+    region: oregon
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+      pip install streamlit
+    startCommand: streamlit run streamlit_app_premium.py --server.port $PORT --server.address 0.0.0.0 --server.enableXsrfProtection false --server.enableCORS false
+    envVars:
+      - key: BACKEND_URL
+        fromService:
+          type: web
+          name: vibeai-backend
+          property: host

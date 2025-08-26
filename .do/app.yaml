@@ -1,0 +1,79 @@
+# DigitalOcean App Platform Configuration
+
+name: vibeai-platform
+region: nyc
+
+services:
+  # Backend API Service
+  - name: backend
+    source_dir: /
+    dockerfile_path: Dockerfile
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    health_check:
+      http_path: /api/health
+    environment_slug: python
+    envs:
+      - key: SERPER_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: GEMINI_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: YOUTUBE_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: RESPONSE_TIMEOUT
+        value: "120"
+      - key: PORT
+        value: "8000"
+
+  # Analytics Dashboard
+  - name: analytics
+    source_dir: /
+    dockerfile_path: Dockerfile.streamlit
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    health_check:
+      http_path: /_stcore/health
+    environment_slug: python
+    envs:
+      - key: BACKEND_URL
+        value: "${backend.PUBLIC_URL}"
+
+  # Premium Dashboard
+  - name: premium
+    source_dir: /
+    dockerfile_path: Dockerfile.streamlit-premium
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    health_check:
+      http_path: /_stcore/health
+    environment_slug: python
+    envs:
+      - key: BACKEND_URL
+        value: "${backend.PUBLIC_URL}"
+
+  # Frontend Service
+  - name: frontend
+    source_dir: /web
+    dockerfile_path: Dockerfile.frontend
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    health_check:
+      http_path: /
+    environment_slug: node-js
+    envs:
+      - key: VITE_API_URL
+        value: "${backend.PUBLIC_URL}"
+      - key: VITE_ANALYTICS_URL
+        value: "${analytics.PUBLIC_URL}"
+      - key: VITE_PREMIUM_URL
+        value: "${premium.PUBLIC_URL}"
+
+# Optional: Add database
+# databases:
+#   - name: vibeai-db
+#     engine: PG
+#     version: "14"
+#     size: db-s-dev-database

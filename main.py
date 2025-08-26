@@ -136,46 +136,275 @@ except Exception:
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    """Serve the SolysAI Access Portal"""
-    try:
-        with open("public_access.html", "r", encoding="utf-8") as f:
-            return f.read()
-    except FileNotFoundError:
-        return """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>SolysAI - Access Portal</title>
-            <style>
-                body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; text-align: center; }
-                .access-btn { padding: 15px 30px; font-size: 16px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; margin: 10px; text-decoration: none; display: inline-block; }
-                .access-btn:hover { background: #0056b3; }
-                .status { background: #e8f5e8; padding: 15px; border-radius: 8px; margin: 20px 0; }
-            </style>
-        </head>
-        <body>
-            <h1>🔍 SolysAI - Enhanced Intelligence Platform</h1>
-            <p>Access the enhanced SolysAI platform with complete 10 OEM coverage and professional analysis.</p>
+    """Serve the VibeAI Web Interface"""
+    return """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>VibeAI - EV Sentiment Analysis Platform</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #333;
+            }
+            .container { 
+                background: rgba(255, 255, 255, 0.95);
+                padding: 40px;
+                border-radius: 20px;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+                max-width: 900px;
+                width: 90%;
+                text-align: center;
+            }
+            .logo { 
+                font-size: 3.5em;
+                font-weight: bold;
+                background: linear-gradient(45deg, #667eea, #764ba2);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                margin-bottom: 20px;
+            }
+            .subtitle { 
+                font-size: 1.3em;
+                color: #666;
+                margin-bottom: 40px;
+            }
+            .feature-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 20px;
+                margin: 40px 0;
+            }
+            .feature-card {
+                background: white;
+                padding: 25px;
+                border-radius: 15px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+                transition: transform 0.3s ease;
+            }
+            .feature-card:hover {
+                transform: translateY(-5px);
+            }
+            .feature-icon {
+                font-size: 2.5em;
+                margin-bottom: 15px;
+            }
+            .feature-title {
+                font-size: 1.2em;
+                font-weight: bold;
+                margin-bottom: 10px;
+                color: #333;
+            }
+            .feature-desc {
+                color: #666;
+                line-height: 1.5;
+            }
+            .cta-section {
+                margin: 40px 0;
+            }
+            .btn {
+                display: inline-block;
+                padding: 15px 30px;
+                margin: 10px;
+                background: linear-gradient(45deg, #667eea, #764ba2);
+                color: white;
+                text-decoration: none;
+                border-radius: 25px;
+                font-weight: bold;
+                transition: all 0.3s ease;
+                border: none;
+                cursor: pointer;
+                font-size: 16px;
+            }
+            .btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            }
+            .btn-secondary {
+                background: linear-gradient(45deg, #11998e, #38ef7d);
+            }
+            .stats {
+                display: flex;
+                justify-content: space-around;
+                margin: 30px 0;
+                flex-wrap: wrap;
+            }
+            .stat {
+                text-align: center;
+                padding: 20px;
+            }
+            .stat-number {
+                font-size: 2.5em;
+                font-weight: bold;
+                color: #667eea;
+            }
+            .stat-label {
+                color: #666;
+                font-size: 1.1em;
+            }
+            .demo-section {
+                background: #f8f9fa;
+                padding: 30px;
+                border-radius: 15px;
+                margin: 30px 0;
+            }
+            .query-input {
+                width: 100%;
+                padding: 15px;
+                border: 2px solid #ddd;
+                border-radius: 10px;
+                font-size: 16px;
+                margin: 10px 0;
+            }
+            .query-input:focus {
+                outline: none;
+                border-color: #667eea;
+            }
+            #result {
+                margin-top: 20px;
+                padding: 20px;
+                background: white;
+                border-radius: 10px;
+                text-align: left;
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="logo">🔍 VibeAI</div>
+            <div class="subtitle">Advanced EV Sentiment Analysis Platform</div>
             
-            <a href="https://ac381d0c95ac.ngrok-free.app" target="_blank" class="access-btn">🎯 Launch Interactive Dashboard</a>
-            <a href="/api/health" target="_blank" class="access-btn">⚡ Check API Status</a>
-            
-            <div class="status">
-                <strong>🟢 System Status: All Services Operational</strong><br>
-                Backend API: ✅ Active | Database: ✅ 100K+ Records | All 10 OEMs Supported
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-number">10</div>
+                    <div class="stat-label">EV Brands</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">100K+</div>
+                    <div class="stat-label">Comments</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">AI</div>
+                    <div class="stat-label">Powered</div>
+                </div>
             </div>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <div class="feature-title">AI Analysis</div>
+                    <div class="feature-desc">Gemini 2.5 Pro powered sentiment analysis with advanced natural language processing</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-title">10 EV Brands</div>
+                    <div class="feature-desc">Complete coverage: Ola, Ather, Bajaj, TVS, Hero, Ampere, River, Ultraviolette, Revolt, BGauss</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <div class="feature-title">Temporal Analysis</div>
+                    <div class="feature-desc">Track sentiment trends by month and year with historical insights</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">�</div>
+                    <div class="feature-title">Export Reports</div>
+                    <div class="feature-desc">Download professional Excel and Word reports with detailed analytics</div>
+                </div>
+            </div>
+
+            <div class="demo-section">
+                <h3>🎯 Try Live Analysis</h3>
+                <input type="text" class="query-input" id="queryInput" placeholder="e.g., What is the sentiment for Ola Electric in 2025?" value="What is the sentiment for Ola Electric?">
+                <br>
+                <button class="btn" onclick="runAnalysis()">🚀 Analyze Now</button>
+                <div id="result"></div>
+            </div>
+
+            <div class="cta-section">
+                <a href="/docs" class="btn">📖 API Documentation</a>
+                <a href="/api/health" class="btn btn-secondary">🏥 System Health</a>
+            </div>
+
+            <div style="margin-top: 30px; color: #888;">
+                <p>🔥 Real-time sentiment analysis for Indian EV market</p>
+                <p>💡 Powered by advanced AI and 100,000+ user comments</p>
+            </div>
+        </div>
+
+        <script>
+            async function runAnalysis() {
+                const query = document.getElementById('queryInput').value;
+                const resultDiv = document.getElementById('result');
+                
+                if (!query.trim()) {
+                    alert('Please enter a query!');
+                    return;
+                }
+
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '<div style="text-align: center; color: #667eea;">🔍 Analyzing... This may take 30-60 seconds for AI processing...</div>';
+
+                try {
+                    const response = await fetch('/api/enhanced-search', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            query: query,
+                            use_youtube_data: true,
+                            max_search_results: 5
+                        })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        resultDiv.innerHTML = `
+                            <h4>✅ Analysis Complete!</h4>
+                            <div style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                                <strong>🤖 AI Response:</strong><br>
+                                ${data.response || 'Analysis completed successfully!'}
+                            </div>
+                            <div style="margin-top: 15px;">
+                                <strong>📊 Data Sources:</strong> ${data.youtube_data_used ? '✅ YouTube Data' : '❌ No YouTube Data'}<br>
+                                <strong>⏱️ Processing Time:</strong> ${data.processing_time ? Math.round(data.processing_time) + 's' : 'N/A'}<br>
+                                <strong>🎯 Export Available:</strong> ${data.exportable ? '✅ Yes' : '❌ No'}
+                            </div>
+                        `;
+                    } else {
+                        throw new Error('Analysis failed');
+                    }
+                } catch (error) {
+                    resultDiv.innerHTML = `
+                        <div style="color: #e74c3c;">
+                            ❌ Analysis failed. Please try again or visit <a href="/docs" style="color: #667eea;">/docs</a> for API documentation.
+                        </div>
+                    `;
+                }
+            }
+
+            // Auto-focus input
+            document.getElementById('queryInput').focus();
             
-            <h3>✅ Latest Enhancements:</h3>
-            <ul style="text-align: left; max-width: 600px; margin: 0 auto;">
-                <li>Complete 10 OEM coverage: Ola Electric, Ather, Bajaj Chetak, TVS iQube, Hero Vida, Ampere, River Mobility, Ultraviolette, Revolt, BGauss</li>
-                <li>Enhanced export functionality for all OEMs (CSV, Excel, Word)</li>
-                <li>Gemini Deep Research style formatting with numbered citations</li>
-                <li>Professional source attribution separating market data from user feedback</li>
-                <li>100,000+ comments analyzed across all Indian EV brands</li>
-            </ul>
-        </body>
-        </html>
-        """
+            // Allow Enter key to trigger analysis
+            document.getElementById('queryInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    runAnalysis();
+                }
+            });
+        </script>
+    </body>
+    </html>
+    """
 
 @app.post("/api/agent/chat", response_model=ChatResponse)
 async def agent_chat(request: ChatRequest):
@@ -835,8 +1064,8 @@ async def quick_excel_export(request: Dict[str, Any]):
         os.makedirs("exports", exist_ok=True)
         
         # Use DocumentExportService if available
-        if hasattr(doc_export_service, 'create_quick_excel_export'):
-            excel_file = await doc_export_service.create_quick_excel_export(request, timestamp)
+        if hasattr(document_export_service, 'create_quick_excel_export'):
+            excel_file = await document_export_service.create_quick_excel_export(request, timestamp)
         else:
             # Fallback to simple pandas export
             import pandas as pd
@@ -865,8 +1094,8 @@ async def quick_csv_export(request: Dict[str, Any]):
         os.makedirs("exports", exist_ok=True)
         
         # Use DocumentExportService if available
-        if hasattr(doc_export_service, 'create_quick_csv_export'):
-            csv_file = await doc_export_service.create_quick_csv_export(request, timestamp)
+        if hasattr(document_export_service, 'create_quick_csv_export'):
+            csv_file = await document_export_service.create_quick_csv_export(request, timestamp)
         else:
             # Fallback to simple pandas export
             import pandas as pd
