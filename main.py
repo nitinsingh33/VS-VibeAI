@@ -29,11 +29,11 @@ from services.response_formatter import ResponseFormatter
 # Load environment variables
 load_dotenv()
 
-# Initialize FastAPI app
+# Initialize FastAPI app with explicit configuration
 app = FastAPI(
-    title="SolysAI Search Agent",
-    description="An AI agent that searches for information and generates factually grounded responses",
-    version="1.0.0",
+    title="VibeAI - EV Sentiment Analysis Platform",
+    description="Advanced EV sentiment analysis powered by Gemini 2.5 Pro with 100K+ comments from 10 Indian EV brands",
+    version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
 )
@@ -640,10 +640,19 @@ async def get_youtube_analytics():
 async def health_check():
     """Get the health status of the application and its services"""
     health_status = enhanced_agent_service.get_health_status()
+    
+    # Add port and environment info for debugging
+    port_info = {
+        "port": os.environ.get("PORT", "8000"),
+        "host": "0.0.0.0",
+        "environment": os.environ.get("NODE_ENV", "production"),
+        "render_service": os.environ.get("RENDER_SERVICE_NAME", "local")
+    }
+    
     return HealthResponse(
         status="healthy",
         timestamp=datetime.now().isoformat(),
-        services=health_status
+        services={**health_status, "deployment_info": port_info}
     )
 
 @app.get("/api/temporal-analysis/{oem_name}")
