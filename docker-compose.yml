@@ -1,24 +1,18 @@
 version: '3.8'
 
 services:
-  # FastAPI Backend - Core AI Engine
+  # Main FastAPI Backend + Embedded Frontend
   backend:
-    build: 
-      context: .
-      dockerfile: Dockerfile.backend
-    container_name: vibeai-backend
+    build: .
     ports:
       - "8000:8000"
     environment:
-      - SERPER_API_KEY=${SERPER_API_KEY}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - SERPER_API_KEY=${SERPER_API_KEY}
       - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
-      - PORT=8000
-      - RESPONSE_TIMEOUT=120
-    volumes:
-      - ./data:/app/data
-      - ./exports:/app/exports
-      - ./logs:/app/logs
+      - RESPONSE_TIMEOUT=30
+      - MAX_SEARCH_RESULTS=5
+      - SEARCH_TIMEOUT=10
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
@@ -26,96 +20,54 @@ services:
       timeout: 10s
       retries: 3
 
+  # React Frontend (Advanced UI)
+  frontend:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://backend:8000
+    depends_on:
+      - backend
+    restart: unless-stopped
+
   # Streamlit Analytics Dashboard
   analytics:
     build:
       context: .
       dockerfile: Dockerfile.streamlit
-    container_name: vibeai-analytics
     ports:
       - "8501:8501"
     environment:
-      - BACKEND_URL=http://backend:8000
-    volumes:
-      - ./data:/app/data
-      - ./exports:/app/exports
-    depends_on:
-      - backend
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - STREAMLIT_SERVER_HEADLESS=true
     restart: unless-stopped
 
-  # Streamlit Premium Dashboard
+  # Premium Analytics Dashboard
   premium:
     build:
       context: .
       dockerfile: Dockerfile.streamlit-premium
-    container_name: vibeai-premium
     ports:
       - "8502:8502"
     environment:
-      - BACKEND_URL=http://backend:8000
-    volumes:
-      - ./data:/app/data
-      - ./exports:/app/exports
-    depends_on:
-      - backend
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - STREAMLIT_SERVER_HEADLESS=true
     restart: unless-stopped
 
-  # React Frontend
-  frontend:
-    build:
-      context: ./web
-      dockerfile: Dockerfile.frontend
-    container_name: vibeai-frontend
-    ports:
-      - "5173:5173"
-    environment:
-      - VITE_API_URL=http://localhost:8000
-      - VITE_ANALYTICS_URL=http://localhost:8501
-      - VITE_PREMIUM_URL=http://localhost:8502
-    depends_on:
-      - backend
-    restart: unless-stopped
-
-  # Node.js Proxy (Optional - for production)
-  proxy:
-    build:
-      context: ./web
-      dockerfile: Dockerfile.proxy
-    container_name: vibeai-proxy
-    ports:
-      - "3000:3000"
-    environment:
-      - BACKEND_URL=http://backend:8000
-      - FRONTEND_URL=http://frontend:5173
-    depends_on:
-      - backend
-      - frontend
-    restart: unless-stopped
-
-  # Nginx Reverse Proxy (Production)
+  # Nginx Reverse Proxy (Single Entry Point)
   nginx:
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
-    container_name: vibeai-nginx
+    build: ./nginx
     ports:
       - "80:80"
       - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./ssl:/etc/nginx/ssl
     depends_on:
       - backend
+      - frontend
       - analytics
       - premium
-      - frontend
     restart: unless-stopped
-
-volumes:
-  vibeai_data:
-  vibeai_exports:
-  vibeai_logs:
-
-networks:
-  default:
-    name: vibeai-network
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf

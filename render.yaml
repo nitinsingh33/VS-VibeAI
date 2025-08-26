@@ -1,5 +1,5 @@
 services:
-  # Main VibeAI Backend API
+  # Main VibeAI Backend API + Embedded Frontend
   - type: web
     name: vibeai-backend
     env: python
@@ -8,11 +8,31 @@ services:
     envVars:
       - key: GEMINI_API_KEY
         sync: false
+      - key: SERPER_API_KEY
+        sync: false
+      - key: YOUTUBE_API_KEY
+        sync: false
       - key: RESPONSE_TIMEOUT
         value: "30"
-      - key: PYTHON_VERSION
-        value: "3.11"
+      - key: MAX_SEARCH_RESULTS
+        value: "5"
+      - key: SEARCH_TIMEOUT
+        value: "10"
     healthCheckPath: /api/health
+    autoDeploy: true
+    
+  # React Frontend (Advanced UI)
+  - type: web
+    name: vibeai-frontend
+    env: node
+    buildCommand: cd web && npm install && npm run build
+    startCommand: cd web && npm run serve
+    envVars:
+      - key: REACT_APP_API_URL
+        fromService:
+          type: web
+          name: vibeai-backend
+          property: host
     autoDeploy: true
     
   # Streamlit Analytics Dashboard
