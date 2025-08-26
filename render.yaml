@@ -4,18 +4,12 @@ services:
     name: vibeai-complete-platform
     env: python
     buildCommand: |
-      pip install --upgrade pip
-      ls -la
-      if [ -f "requirements-complete.txt" ]; then
-        echo "Found requirements-complete.txt, installing..."
-        pip install -r requirements-complete.txt
-      elif [ -f "requirements-production.txt" ]; then
-        echo "Fallback to requirements-production.txt..."
-        pip install -r requirements-production.txt
-      else
-        echo "Installing minimal requirements..."
-        pip install fastapi uvicorn google-generativeai requests python-dotenv pandas numpy
-      fi
+      python -m pip install --upgrade pip setuptools wheel
+      pip install --no-cache-dir fastapi==0.104.1 uvicorn==0.24.0 pydantic==2.5.0
+      pip install --no-cache-dir google-generativeai==0.3.2
+      pip install --no-cache-dir requests==2.31.0 python-dotenv==1.0.0
+      pip install --no-cache-dir pandas==2.1.4 numpy==1.24.3
+      pip install --no-cache-dir openpyxl==3.1.2
     startCommand: |
       if [ -f "start_robust.py" ]; then
         python start_robust.py
