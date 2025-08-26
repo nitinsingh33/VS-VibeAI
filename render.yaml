@@ -1,23 +1,14 @@
 services:
-  # VibeAI Complete Platform - All Features Integrated
+  # VibeAI Ultra-Simple Platform - Bypass Python 3.13 Issues
   - type: web
-    name: vibeai-complete-platform
+    name: vibeai-platform
     env: python
     buildCommand: |
-      python -m pip install --upgrade pip setuptools wheel
-      pip install --no-cache-dir fastapi==0.104.1 uvicorn==0.24.0 pydantic==2.5.0
-      pip install --no-cache-dir google-generativeai==0.3.2
-      pip install --no-cache-dir requests==2.31.0 python-dotenv==1.0.0
-      pip install --no-cache-dir pandas==2.1.4 numpy==1.24.3
-      pip install --no-cache-dir openpyxl==3.1.2
-    startCommand: |
-      if [ -f "start_robust.py" ]; then
-        python start_robust.py
-      elif [ -f "start_complete.py" ]; then
-        python start_complete.py
-      else
-        python -m uvicorn main_complete:app --host 0.0.0.0 --port $PORT
-      fi
+      python -m pip install --upgrade pip
+      python -m pip install --only-binary=all --no-build-isolation fastapi uvicorn pydantic
+      python -m pip install --only-binary=all requests python-dotenv
+      python -c "import fastapi, uvicorn, pydantic, requests; print('Core dependencies verified')"
+    startCommand: python start_ultra_simple.py
     envVars:
       - key: GEMINI_API_KEY
         sync: false
@@ -25,11 +16,5 @@ services:
         sync: false
       - key: YOUTUBE_API_KEY
         sync: false
-      - key: RESPONSE_TIMEOUT
-        value: "30"
-      - key: MAX_SEARCH_RESULTS
-        value: "5"
-      - key: SEARCH_TIMEOUT
-        value: "10"
     healthCheckPath: /health
     autoDeploy: true
