@@ -1,14 +1,16 @@
-# VibeAI Render Configuration - Multi-Service Deployment
+# VibeAI Render Configuration - Optimized for Free Tier
 
 services:
-  # Backend API Service
+  # Main Backend Service (Free Tier)
   - type: web
     name: vibeai-backend
     runtime: python3
-    plan: starter
+    plan: free
     region: oregon
-    buildCommand: pip install -r requirements.txt
-    startCommand: python -m uvicorn main:app --host 0.0.0.0 --port $PORT
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+    startCommand: python -m uvicorn main:app --host 0.0.0.0 --port $PORT --workers 1
     healthCheckPath: /api/health
     envVars:
       - key: SERPER_API_KEY
@@ -18,21 +20,27 @@ services:
       - key: YOUTUBE_API_KEY
         sync: false
       - key: RESPONSE_TIMEOUT
-        value: 120
+        value: "120"
+      - key: MAX_SEARCH_RESULTS
+        value: "5"
+      - key: SEARCH_TIMEOUT
+        value: "10"
       - key: PYTHONPATH
-        value: /opt/render/project/src
-      - key: PORT
-        value: 8000
+        value: "/opt/render/project/src"
+      - key: PYTHON_VERSION
+        value: "3.11.0"
 
-  # Analytics Dashboard Service
+  # Analytics Dashboard (Free Tier)
   - type: web
     name: vibeai-analytics
     runtime: python3
-    plan: starter
+    plan: free
     region: oregon
-    buildCommand: pip install -r requirements.txt
-    startCommand: streamlit run analytics_dashboard.py --server.port $PORT --server.address 0.0.0.0 --server.enableXsrfProtection false
-    healthCheckPath: /_stcore/health
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+      pip install streamlit
+    startCommand: streamlit run analytics_dashboard.py --server.port $PORT --server.address 0.0.0.0 --server.enableXsrfProtection false --server.enableCORS false
     envVars:
       - key: BACKEND_URL
         fromService:
@@ -40,45 +48,20 @@ services:
           name: vibeai-backend
           property: host
 
-  # Premium Dashboard Service
+  # Premium Dashboard (Free Tier)  
   - type: web
     name: vibeai-premium
     runtime: python3
-    plan: starter
+    plan: free
     region: oregon
-    buildCommand: pip install -r requirements.txt
-    startCommand: streamlit run streamlit_app_premium.py --server.port $PORT --server.address 0.0.0.0 --server.enableXsrfProtection false
-    healthCheckPath: /_stcore/health
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+      pip install streamlit
+    startCommand: streamlit run streamlit_app_premium.py --server.port $PORT --server.address 0.0.0.0 --server.enableXsrfProtection false --server.enableCORS false
     envVars:
       - key: BACKEND_URL
         fromService:
           type: web
           name: vibeai-backend
-          property: host
-
-  # Frontend Service
-  - type: web
-    name: vibeai-frontend
-    runtime: node
-    plan: starter
-    region: oregon
-    rootDir: ./web
-    buildCommand: npm install && npm run build
-    startCommand: npm run dev -- --host 0.0.0.0 --port $PORT
-    healthCheckPath: /
-    envVars:
-      - key: VITE_API_URL
-        fromService:
-          type: web
-          name: vibeai-backend
-          property: host
-      - key: VITE_ANALYTICS_URL
-        fromService:
-          type: web
-          name: vibeai-analytics
-          property: host
-      - key: VITE_PREMIUM_URL
-        fromService:
-          type: web
-          name: vibeai-premium
           property: host
