@@ -3,8 +3,27 @@ services:
   - type: web
     name: vibeai-complete-platform
     env: python
-    buildCommand: pip install --upgrade pip && pip install -r requirements-complete.txt
-    startCommand: python start_complete.py
+    buildCommand: |
+      pip install --upgrade pip
+      ls -la
+      if [ -f "requirements-complete.txt" ]; then
+        echo "Found requirements-complete.txt, installing..."
+        pip install -r requirements-complete.txt
+      elif [ -f "requirements-production.txt" ]; then
+        echo "Fallback to requirements-production.txt..."
+        pip install -r requirements-production.txt
+      else
+        echo "Installing minimal requirements..."
+        pip install fastapi uvicorn google-generativeai requests python-dotenv pandas numpy
+      fi
+    startCommand: |
+      if [ -f "start_robust.py" ]; then
+        python start_robust.py
+      elif [ -f "start_complete.py" ]; then
+        python start_complete.py
+      else
+        python -m uvicorn main_complete:app --host 0.0.0.0 --port $PORT
+      fi
     envVars:
       - key: GEMINI_API_KEY
         sync: false
