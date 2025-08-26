@@ -1,0 +1,30 @@
+# PRODUCTION REQUIREMENTS - MINIMAL & STABLE
+# Core Framework - Essential for FastAPI
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-dotenv==1.0.0
+pydantic>=2.5.0
+python-multipart==0.0.6
+
+# AI & Data Processing - Core functionality
+google-generativeai==0.3.2
+requests==2.31.0
+
+# Basic Data Processing
+pandas>=1.5.0
+numpy>=1.24.0
+
+# Web & Export - Basic functionality
+jinja2>=3.1.0
+aiofiles>=23.0.0
+
+# Optional Analytics (only if needed)
+# streamlit>=1.28.0
+# plotly>=5.15.0
+# matplotlib>=3.7.0
+# seaborn>=0.12.0
+
+# Optional Export (only if needed)
+# openpyxl>=3.1.0
+# python-docx>=0.8.11
+# xlsxwriter>=3.1.0

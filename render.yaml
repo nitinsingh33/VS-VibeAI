@@ -3,8 +3,8 @@ services:
   - type: web
     name: vibeai-backend
     env: python
-    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
-    startCommand: python -m uvicorn main:app --host 0.0.0.0 --port $PORT --log-level info
+    buildCommand: pip install --upgrade pip && pip install -r requirements-production.txt
+    startCommand: python -m uvicorn main_minimal:app --host 0.0.0.0 --port $PORT --log-level info
     envVars:
       - key: GEMINI_API_KEY
         sync: false
@@ -18,7 +18,7 @@ services:
         value: "5"
       - key: SEARCH_TIMEOUT
         value: "10"
-    healthCheckPath: /api/health
+    healthCheckPath: /health
     autoDeploy: true
     
   # React Frontend (Advanced UI)
