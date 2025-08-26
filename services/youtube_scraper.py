@@ -14,16 +14,27 @@ import logging
 import requests
 from urllib.parse import urlparse, parse_qs
 
+# Graceful imports with fallbacks
 try:
     from youtube_comment_downloader import YoutubeCommentDownloader
-    import yt_dlp
-    from bs4 import BeautifulSoup
+    _YOUTUBE_DOWNLOADER_AVAILABLE = True
 except ImportError:
-    print("Installing required packages...")
-    os.system("pip install youtube-comment-downloader yt-dlp beautifulsoup4 requests transformers torch --quiet")
-    from youtube_comment_downloader import YoutubeCommentDownloader
+    print("⚠️ youtube_comment_downloader not available - YouTube scraping will be limited")
+    _YOUTUBE_DOWNLOADER_AVAILABLE = False
+
+try:
     import yt_dlp
+    _YT_DLP_AVAILABLE = True
+except ImportError:
+    print("⚠️ yt_dlp not available - some YouTube features disabled")
+    _YT_DLP_AVAILABLE = False
+
+try:
     from bs4 import BeautifulSoup
+    _BS4_AVAILABLE = True
+except ImportError:
+    print("⚠️ BeautifulSoup4 not available - HTML parsing disabled")
+    _BS4_AVAILABLE = False
 
 # Add optional transformers sentiment pipeline support (multilingual)
 try:
@@ -41,7 +52,12 @@ except Exception:
 
 class YouTubeCommentScraper:
     def __init__(self, youtube_api_key: Optional[str] = None):
-        self.downloader = YoutubeCommentDownloader()
+        # Initialize with graceful fallbacks
+        if _YOUTUBE_DOWNLOADER_AVAILABLE:
+            self.downloader = YoutubeCommentDownloader()
+        else:
+            self.downloader = None
+            print("⚠️ YouTube comment downloader not available - some features will be limited")
         
         # Enhanced OEM search terms for better coverage
         self.oems = {
@@ -65,7 +81,7 @@ class YouTubeCommentScraper:
         
         # Internal cache for sentiment pipeline availability
         self._transformers_available = _TRANSFORMERS_AVAILABLE
-        self._sentiment_pipeline = _SENTIMENT_PIPELINE
+        self._sentiment_pipeline = _SENTIMENT_PIPELINE if _TRANSFORMERS_AVAILABLE else None
         if not self._transformers_available:
             self.logger.info("Transformers not available - falling back to rule-based sentiment (supports Hindi/English heuristics)")
 
