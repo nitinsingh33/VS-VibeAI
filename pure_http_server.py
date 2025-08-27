@@ -250,34 +250,101 @@ class VibeAIHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(response)
     
+    def analyze_sentiment(self, text):
+        """Advanced sentiment analysis for Hindi/English mixed text"""
+        text_lower = text.lower()
+        
+        # Enhanced positive indicators (Hindi + English)
+        positive_words = [
+            'good', 'great', 'amazing', 'excellent', 'love', 'best', 'awesome', 'perfect', 'nice', 'wonderful',
+            'gajab', 'badhiya', 'mast', 'accha', 'badiya', 'zabardast', 'kamaal', 'shandar', 'ekdum',
+            '❤', '♥', '💕', '👍', '👌', '🔥', '💯', '✨', 'so good', 'bilkul problem nahi', 'no problem'
+        ]
+        
+        # Enhanced negative indicators
+        negative_words = [
+            'bad', 'terrible', 'worst', 'hate', 'awful', 'problem', 'issue', 'failure', 'poor', 'disappointing',
+            'bekaar', 'ghatiya', 'kharab', 'bura', 'faltu', 'bakwas', 'nautanki', 'pagal', 'dimag',
+            'problem he', 'kharaab', 'waste', 'regret', 'fraud'
+        ]
+        
+        # Brand detection with better scoring
+        detected_brand = None
+        for brand in self.EV_DATA.keys():
+            brand_words = [brand.lower(), brand.split()[0].lower()]
+            if brand.lower() == 'ola electric':
+                brand_words.extend(['ola', 's1', 's1 pro', 's1 air'])
+            elif brand.lower() == 'ather':
+                brand_words.extend(['ather', '450x', '450'])
+            elif brand.lower() == 'bajaj chetak':
+                brand_words.extend(['bajaj', 'chetak'])
+            elif brand.lower() == 'tvs iqube':
+                brand_words.extend(['tvs', 'iqube'])
+            elif brand.lower() == 'hero vida':
+                brand_words.extend(['hero', 'vida'])
+                
+            if any(word in text_lower for word in brand_words):
+                detected_brand = brand
+                break
+        
+        # Sentiment scoring
+        positive_score = sum(1 for word in positive_words if word in text_lower)
+        negative_score = sum(1 for word in negative_words if word in text_lower)
+        
+        # Context analysis for phrases
+        if 'bilkul problem nahi' in text_lower or 'no problem' in text_lower:
+            positive_score += 2
+        if 'so good' in text_lower or 'update ke baad' in text_lower:
+            positive_score += 1
+        if '❤' in text or 'love' in text_lower:
+            positive_score += 2
+            
+        # Calculate sentiment
+        total_sentiment_words = positive_score + negative_score
+        if total_sentiment_words == 0:
+            sentiment_score = 0.6  # neutral
+        else:
+            sentiment_score = positive_score / total_sentiment_words
+            
+        # Adjust for detected brand baseline
+        if detected_brand:
+            brand_baseline = self.EV_DATA[detected_brand]["sentiment"]
+            sentiment_score = (sentiment_score + brand_baseline) / 2
+            
+        return sentiment_score, detected_brand
+
     def handle_analyze(self):
-        """Handle analysis POST request"""
+        """Handle analysis POST request with advanced sentiment analysis"""
         try:
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
             data = json.loads(post_data.decode())
             
-            query = data.get('query', '').lower()
+            text = data.get('text', data.get('query', ''))
             
-            # Simple keyword matching
-            for brand, brand_data in self.EV_DATA.items():
-                if brand.lower() in query:
-                    sentiment = brand_data["sentiment"]
-                    category = "positive" if sentiment > 0.7 else "neutral" if sentiment > 0.6 else "negative"
-                    
-                    result = {
-                        "query": data.get('query', ''),
-                        "brand": brand,
-                        "sentiment_score": sentiment,
-                        "category": category,
-                        "description": brand_data["description"],
-                        "status": "success"
-                    }
-                    break
-            else:
-                # General response
+            if not text:
                 result = {
-                    "query": data.get('query', ''),
+                    "error": "No text provided for analysis",
+                    "status": "error"
+                }
+            else:
+                # Advanced sentiment analysis
+                sentiment_score, detected_brand = self.analyze_sentiment(text)
+                
+                # Categorize sentiment
+                if sentiment_score >= 0.7:
+                    category = "positive"
+                elif sentiment_score >= 0.4:
+                    category = "neutral"
+                else:
+                    category = "negative"
+                
+                result = {
+                    "text": text,
+                    "sentiment_score": round(sentiment_score, 3),
+                    "category": category,
+                    "detected_brand": detected_brand,
+                    "brand_info": self.EV_DATA.get(detected_brand) if detected_brand else None,
                     "response": "Indian EV market analysis: Positive sentiment overall with Ather (0.82), Ola Electric (0.75), and TVS iQube (0.71) leading.",
                     "status": "success"
                 }

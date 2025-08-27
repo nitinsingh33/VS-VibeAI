@@ -1,0 +1,8 @@
+{
+  "name": "vibeai-nuclear-option",
+  "version": "2.0.0-nuclear",
+  "description": "Nuclear option deployment with zero dependencies",
+  "scripts": {
+    "start": "echo 'Using Python server instead'"
+  }
+}
