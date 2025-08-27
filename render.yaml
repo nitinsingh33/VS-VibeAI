@@ -1,14 +1,10 @@
 services:
-  # VibeAI Ultra-Simple Platform - Bypass Python 3.13 Issues
+  # VibeAI Nuclear Option - Pure Python HTTP Server
   - type: web
     name: vibeai-platform
     env: python
-    buildCommand: |
-      python -m pip install --upgrade pip
-      python -m pip install --only-binary=all --no-build-isolation fastapi uvicorn pydantic
-      python -m pip install --only-binary=all requests python-dotenv
-      python -c "import fastapi, uvicorn, pydantic, requests; print('Core dependencies verified')"
-    startCommand: python start_ultra_simple.py
+    buildCommand: echo "No build dependencies needed - using pure Python"
+    startCommand: python pure_http_server.py
     envVars:
       - key: GEMINI_API_KEY
         sync: false
