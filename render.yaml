@@ -1,10 +1,14 @@
 services:
-  # VibeAI Nuclear Option - Pure Python HTTP Server
+  # VibeAI NUCLEAR OPTION - Pure Python HTTP Server (ZERO Dependencies)
   - type: web
-    name: vibeai-platform
+    name: vibeai-nuclear-option
     env: python
-    buildCommand: echo "No build dependencies needed - using pure Python"
-    startCommand: python pure_http_server.py
+    buildCommand: |
+      echo "==============================================="
+      echo "NUCLEAR OPTION: NO DEPENDENCIES TO INSTALL"
+      echo "Using only Python standard library"
+      echo "==============================================="
+    startCommand: python3 pure_http_server.py
     envVars:
       - key: GEMINI_API_KEY
         sync: false
@@ -12,5 +16,7 @@ services:
         sync: false
       - key: YOUTUBE_API_KEY
         sync: false
+      - key: PORT
+        value: "10000"
     healthCheckPath: /health
     autoDeploy: true
