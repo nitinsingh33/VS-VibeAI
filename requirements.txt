@@ -1,0 +1,3 @@
+# VibeAI Nuclear Option - No external dependencies
+# This file satisfies Render's auto-detection but installs nothing
+# Pure Python standard library implementation

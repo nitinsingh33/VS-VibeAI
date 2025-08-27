@@ -1,0 +1,17 @@
+# VibeAI Complete Requirements - Nuclear Option
+# This file exists only to prevent Render build errors
+# No actual packages will be installed - using pure Python standard library
+
+# Commenting out all dependencies to use nuclear option:
+# fastapi==0.104.1
+# uvicorn==0.24.0  
+# pydantic==2.5.0
+# google-generativeai==0.3.2
+# requests==2.31.0
+# python-dotenv==1.0.0
+# pandas==2.1.4
+# numpy==1.24.3
+# openpyxl==3.1.2
+
+# Nuclear option: Zero external dependencies
+# Using only Python standard library for guaranteed deployment
