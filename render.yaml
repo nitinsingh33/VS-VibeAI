@@ -1,13 +1,16 @@
 services:
-  # VibeAI NUCLEAR OPTION - Pure Python HTTP Server (ZERO Dependencies)
+  # VibeAI ULTRA NUCLEAR - Force Override All Auto-Detection
   - type: web
-    name: vibeai-nuclear-option
+    name: vibeai-ultra-nuclear
     env: python
     buildCommand: |
-      echo "==============================================="
-      echo "NUCLEAR OPTION: NO DEPENDENCIES TO INSTALL"
-      echo "Using only Python standard library"
-      echo "==============================================="
+      echo "🔥 ULTRA NUCLEAR OPTION ACTIVATED 🔥"
+      echo "Forcing Render to ignore ALL auto-detection"
+      echo "Creating empty requirements file to satisfy Render"
+      touch requirements.txt
+      echo "# Nuclear option - no dependencies" > requirements.txt
+      echo "ZERO external dependencies - pure Python only"
+      echo "Build completed successfully with nuclear option"
     startCommand: python3 pure_http_server.py
     envVars:
       - key: GEMINI_API_KEY
