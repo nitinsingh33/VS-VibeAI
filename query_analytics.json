@@ -478,5 +478,72 @@
     ],
     "error_occurred": false,
     "error_message": null
+  },
+  {
+    "timestamp": "2025-08-27T17:37:47.692054",
+    "query_id": "e57b3661-fbac-4d67-abc1-dab268b70b4e",
+    "user_query": "ola vs ather sentiment analysis",
+    "response_preview": "Of course. Here is a detailed sentiment analysis comparing Ola Electric and Ather Energy based on the most recent data from August 2025.\n\n### **Executive Summary**\n\nBased on an analysis of user feedba...",
+    "processing_time": 31.898705005645752,
+    "analysis_method": "enhanced_search",
+    "confidence_level": null,
+    "total_comments": null,
+    "export_requested": true,
+    "user_ip": "127.0.0.1",
+    "user_agent": "python-requests/2.31.0",
+    "session_id": "68ea821a-b5b1-4c88-9e85-4f4cd38002e1",
+    "response_length": 5525,
+    "temporal_analysis_used": false,
+    "oems_mentioned": [
+      "Ola Electric",
+      "Ather"
+    ],
+    "error_occurred": false,
+    "error_message": null
+  },
+  {
+    "timestamp": "2025-08-27T17:39:01.693977",
+    "query_id": "ae539b27-5114-4f0f-9bd5-a42bc0cd66a5",
+    "user_query": "ola vs ather sentiment analysis",
+    "response_preview": "",
+    "processing_time": 32.10415172576904,
+    "analysis_method": "unknown",
+    "confidence_level": null,
+    "total_comments": null,
+    "export_requested": false,
+    "user_ip": "127.0.0.1",
+    "user_agent": "python-requests/2.31.0",
+    "session_id": "91cb5742-31d8-47ea-86d0-119e82685445",
+    "response_length": 0,
+    "temporal_analysis_used": false,
+    "oems_mentioned": [
+      "Ola Electric",
+      "Ather"
+    ],
+    "error_occurred": true,
+    "error_message": "Request timed out after 30 seconds. Try a simpler query or increase timeout."
+  },
+  {
+    "timestamp": "2025-08-27T17:39:50.428436",
+    "query_id": "37787d60-bd37-4c9e-9c0e-f95cfe1f2adc",
+    "user_query": "ola vs ather vs bajaj sentiment analysis",
+    "response_preview": "",
+    "processing_time": 32.059181928634644,
+    "analysis_method": "unknown",
+    "confidence_level": null,
+    "total_comments": null,
+    "export_requested": false,
+    "user_ip": "127.0.0.1",
+    "user_agent": "python-requests/2.31.0",
+    "session_id": "a788900e-4a69-436f-b1ee-1cb923493cf8",
+    "response_length": 0,
+    "temporal_analysis_used": false,
+    "oems_mentioned": [
+      "Ola Electric",
+      "Bajaj Chetak",
+      "Ather"
+    ],
+    "error_occurred": true,
+    "error_message": "Request timed out after 30 seconds. Try a simpler query or increase timeout."
   }
 ]

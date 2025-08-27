@@ -329,5 +329,42 @@
     ],
     "export_requests": 1,
     "errors": 0
+  },
+  "68ea821a-b5b1-4c88-9e85-4f4cd38002e1": {
+    "first_query_time": "2025-08-27T17:37:47.692054",
+    "last_query_time": "2025-08-27T17:37:47.692054",
+    "total_queries": 1,
+    "total_processing_time": 31.898705005645752,
+    "unique_oems_queried": [
+      "Ather",
+      "Ola Electric"
+    ],
+    "export_requests": 1,
+    "errors": 0
+  },
+  "91cb5742-31d8-47ea-86d0-119e82685445": {
+    "first_query_time": "2025-08-27T17:39:01.693977",
+    "last_query_time": "2025-08-27T17:39:01.693977",
+    "total_queries": 1,
+    "total_processing_time": 32.10415172576904,
+    "unique_oems_queried": [
+      "Ather",
+      "Ola Electric"
+    ],
+    "export_requests": 0,
+    "errors": 1
+  },
+  "a788900e-4a69-436f-b1ee-1cb923493cf8": {
+    "first_query_time": "2025-08-27T17:39:50.428436",
+    "last_query_time": "2025-08-27T17:39:50.428436",
+    "total_queries": 1,
+    "total_processing_time": 32.059181928634644,
+    "unique_oems_queried": [
+      "Ather",
+      "Bajaj Chetak",
+      "Ola Electric"
+    ],
+    "export_requests": 0,
+    "errors": 1
   }
 }

@@ -37,5 +37,20 @@
     },
     "temporal_queries": 0,
     "ai_analysis_queries": 0
+  },
+  "2025-08-27": {
+    "total_queries": 3,
+    "total_processing_time": 96.06203866004944,
+    "avg_processing_time": 32.020679553349815,
+    "unique_users": 0,
+    "export_requests": 1,
+    "errors": 2,
+    "popular_oems": {
+      "Ola Electric": 3,
+      "Ather": 3,
+      "Bajaj Chetak": 1
+    },
+    "temporal_queries": 0,
+    "ai_analysis_queries": 0
   }
 }
