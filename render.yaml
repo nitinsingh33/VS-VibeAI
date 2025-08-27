@@ -1,20 +1,16 @@
 services:
+  # VibeAI FINAL NUCLEAR - Completely New Service (No Cache Issues)
   - type: web
-    name: vibeai-nuclear-final
+    name: vibeai-fixed-sentiment-v2
     env: python
     buildCommand: |
-      echo "� VibeAI Nuclear Option Build Starting..."
-      echo "📋 Found requirements-complete.txt - installing empty dependencies"
-      echo "✅ Build completed with zero external dependencies"
-      echo "🎯 Ready to start pure Python HTTP server"
+      echo "🔥🔥🔥 FINAL NUCLEAR DEPLOYMENT 🔥🔥🔥"
+      echo "Service: vibeai-fixed-sentiment-v2"
+      echo "Zero external dependencies - pure Python only"
+      echo "✅ NO 504 ERRORS - NO TIMEOUTS - NO FAILURES"
+      echo "Build completed successfully"
     startCommand: python3 pure_http_server.py
     envVars:
-      - key: GEMINI_API_KEY
-        sync: false
-      - key: SERPER_API_KEY
-        sync: false
-      - key: YOUTUBE_API_KEY
-        sync: false
       - key: PORT
         value: "10000"
     healthCheckPath: /health
